@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Как устроена система дропа в карте TWRPG: формулы по шагам и полные таблицы по 42 боссам.">
+<meta property="og:title" content="Дроп, виши и сакрифайсы">
+<meta property="og:description" content="Как устроена система дропа в карте TWRPG: формулы по шагам и полные таблицы по 42 боссам.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><text y=%2226%22 font-size=%2226%22>🎲</text></svg>">
+<title>Дроп, виши и сакрифайсы</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f7f5f9; --surface:#ffffff; --surface-2:#f1eef5; --ink:#191622; --ink-2:#4a4356;
+  --muted:#6f6880; --line:#e3dfea; --line-2:#cfc8dc;
+  --accent:#733cbe; --accent-soft:#efe6fb; --accent-ink:#5a2ea0;
+  --gold:#9a6a10; --gold-soft:#faf1d9; --crimson:#c31237; --teal:#1c7a7a;
+  --r1:#8a8a8a; --r2:#5f79c9; --r3:#a9791a; --r4:#8a5cb8; --r5:#2b8a8a; --r6:#c31237; --r7:#2f8f4a; --r8:#733cbe; --r99:#5d8a2f;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141118; --surface:#1d1926; --surface-2:#241f30; --ink:#ece8f2; --ink-2:#c4bdd2;
+    --muted:#948ca6; --line:#2e2839; --line-2:#3d3550;
+    --accent:#c39be1; --accent-soft:#2a2036; --accent-ink:#d9c0ef;
+    --gold:#ebd787; --gold-soft:#2b2415; --crimson:#ef5d78; --teal:#7fd0d0;
+    --r1:#afafaf; --r2:#afc3ff; --r3:#ebd787; --r4:#c39be1; --r5:#9be1e1; --r6:#e8546f; --r7:#99ff99; --r8:#a97ce8; --r99:#d7f0b9;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141118; --surface:#1d1926; --surface-2:#241f30; --ink:#ece8f2; --ink-2:#c4bdd2;
+  --muted:#948ca6; --line:#2e2839; --line-2:#3d3550;
+  --accent:#c39be1; --accent-soft:#2a2036; --accent-ink:#d9c0ef;
+  --gold:#ebd787; --gold-soft:#2b2415; --crimson:#ef5d78; --teal:#7fd0d0;
+  --r1:#afafaf; --r2:#afc3ff; --r3:#ebd787; --r4:#c39be1; --r5:#9be1e1; --r6:#e8546f; --r7:#99ff99; --r8:#a97ce8; --r99:#d7f0b9;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16.5px; line-height:1.68; margin:0; padding:0 20px 96px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto}
+.prose{max-width:70ch}
+h1,h2{font-family:Fraunces,Georgia,serif;font-weight:600;text-wrap:balance;margin:0;line-height:1.16}
+h1{font-size:clamp(2.1rem,5vw,3.1rem);letter-spacing:-.015em}
+h2{font-size:clamp(1.5rem,2.7vw,2rem);letter-spacing:-.01em;max-width:24ch}
+h3{font-family:"IBM Plex Sans",sans-serif;font-size:1.08rem;font-weight:600;margin:0;line-height:1.35}
+p{margin:0}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em}
+code{background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:.08em .34em}
+b{font-weight:600}
+a{color:var(--accent-ink)}
+
+header.top{display:flex;flex-direction:column;gap:18px;padding:56px 0 30px;border-bottom:1px solid var(--line)}
+.kicker{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:1.1rem;color:var(--ink-2);max-width:64ch}
+
+section{padding:46px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:22px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink)}
+.stack{display:flex;flex-direction:column;gap:14px}
+
+/* приём: пошаговый расчёт — нумерация здесь означает реальный порядок применения */
+.steps{display:flex;flex-direction:column;gap:0;counter-reset:s;max-width:78ch}
+.step{display:grid;grid-template-columns:34px 1fr;gap:16px;padding:16px 0;border-top:1px solid var(--line)}
+.step:last-child{border-bottom:1px solid var(--line)}
+.step::before{
+  counter-increment:s;content:counter(s);
+  font-family:"IBM Plex Mono",monospace;font-size:.8rem;font-weight:600;
+  color:var(--accent-ink);background:var(--accent-soft);border-radius:50%;
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;margin-top:2px;
+}
+.step .b{display:flex;flex-direction:column;gap:7px}
+.step .t{font-weight:600}
+.step .d{color:var(--ink-2);font-size:.95rem}
+.eq{font-family:"IBM Plex Mono",monospace;font-size:.85rem;background:var(--surface);border:1px solid var(--line);
+    border-radius:7px;padding:9px 13px;color:var(--ink);align-self:flex-start;max-width:100%;overflow-x:auto;
+    font-variant-numeric:tabular-nums}
+.eq b{color:var(--accent-ink)}
+.res{color:var(--accent-ink);font-weight:600}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:17px 19px;display:flex;flex-direction:column;gap:8px}
+.card .h{font-weight:600;font-size:.97rem}
+.card .v{font-family:"IBM Plex Mono",monospace;font-size:1.4rem;font-weight:600;color:var(--accent-ink);font-variant-numeric:tabular-nums;line-height:1.2}
+.card .d{font-size:.9rem;color:var(--ink-2)}
+
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.panel .tag{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.87rem}
+th,td{text-align:left;padding:10px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{background:var(--surface-2);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface-2)}
+td.c{text-align:center;white-space:nowrap}
+td.num,.tnum{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+td.sm{font-size:.83rem;color:var(--ink-2)}
+.dim{color:var(--muted)}
+
+td.id{white-space:nowrap}
+td.id code{background:none;border:none;padding:0;font-weight:600;color:var(--accent-ink)}
+td.id .nm{display:block;font-size:.79rem;color:var(--muted)}
+td.drops{min-width:280px;line-height:2.1}
+.it{font-family:"IBM Plex Mono",monospace;font-size:.75rem;border:1px solid var(--line-2);border-radius:5px;padding:.15em .45em;white-space:nowrap;color:var(--ink-2)}
+.it b{color:var(--accent-ink);font-weight:600;margin-left:.4em}
+.it.fx{border-color:var(--gold);background:var(--gold-soft)}
+.it.fx b{color:var(--gold)}
+
+.tier{font-family:"IBM Plex Mono",monospace;font-size:.7rem;border-radius:999px;padding:.15em .6em;border:1px solid currentColor;white-space:nowrap}
+.t0{color:var(--r1)}.t1{color:var(--r3)}.t2{color:var(--r5)}.t3{color:var(--r4)}.t4{color:var(--r6)}.t5{color:var(--r8)}
+
+ul{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:8px;max-width:72ch}
+li::marker{color:var(--accent)}
+.note{background:var(--accent-soft);border:1px solid var(--line-2);border-radius:10px;padding:15px 19px;font-size:.95rem;color:var(--ink-2);max-width:78ch}
+.note b{color:var(--ink)}
+.warn{border-left:3px solid var(--crimson)}
+.code-aside{border-left:3px solid var(--line-2);padding:2px 0 2px 16px;color:var(--muted);font-size:.89rem;max-width:72ch}
+.code-aside code{font-size:.82em}
+footer{padding:36px 0 0;color:var(--muted);font-size:.86rem;max-width:78ch}
+@media (max-width:640px){ section{padding:34px 0} body{padding:0 14px 64px} .step{grid-template-columns:26px 1fr;gap:12px} }
+</style>
+<style>
+.sitenav{display:flex;gap:8px;align-items:center;padding:14px 0 0;font-size:.85rem}
+.sitenav a{font-family:"IBM Plex Mono",monospace;font-size:.78rem;letter-spacing:.04em;text-decoration:none;
+  color:var(--muted);border:1px solid var(--line-2);border-radius:999px;padding:.3em .85em;background:var(--surface)}
+.sitenav a[aria-current="page"]{color:var(--accent-ink);border-color:var(--accent);background:var(--accent-soft)}
+.sitenav a:hover{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap"><nav class="sitenav">
+  <a href="./">Калькулятор</a>
+  <a href="./guide.html" aria-current="page">Как считается дроп</a>
+</nav></div>
+
+
+<div class="wrap">
+<header class="top">
+  <div class="kicker">Как на самом деле считается дроп</div>
+  <h1>Дроп, виши и сакрифайсы</h1>
+  <p class="lede">Разбор системы выпадения предметов в карте TWRPG: от «что такое строка дропа» до полных таблиц по всем 42 боссам. Каждая формула расписана по шагам, с живыми числами из скрипта карты.</p>
+</header>
+<section>
+  <div class="eyebrow">Самое главное</div>
+  <h2>Всё сводится к одному броску кубика на каждую строку списка</h2>
+  <div class="prose stack">
+    <p>У каждого типа монстра есть <b>список дропа</b> — набор строк вида «предмет + шанс в процентах». Когда монстр умирает, игра проходит по этим строкам и для каждой бросает случайное число от 0 до 100. Выпало меньше шанса — предмет падает. Выпало больше — эта строка пропущена.</p>
+    <p>Всё остальное в системе — виши, сакрифайсы, сложность, размер группы, питомцы — <b>не добавляет новых бросков</b>. Оно только меняет то число, с которым сравнивают кубик. Поэтому дальше вся статья про одно: как из базового процента получается итоговый.</p>
+  </div>
+  <div class="cards">
+    <div class="card"><div class="h">Строк в списке</div><div class="v">1 – 10</div><div class="d">У обычного моба одна-две, у босса до десяти. Строки не связаны между собой: выпасть может и ноль вещей, и несколько сразу.</div></div>
+    <div class="card"><div class="h">Базовые шансы</div><div class="v">0.005 – 25 %</div><div class="d">25 % — шмотки с мировых боссов, 2–3 % — вещи с рейдов, 0.005 % — маунты и коллекционные редкости.</div></div>
+    <div class="card"><div class="h">Максимальный множитель</div><div class="v">×3.0</div><div class="d">Столько даёт полный набор сакрифайсов. Остальные бонусы умножаются сверху.</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Шаг 1 из 5 · список дропа</div>
+  <h2>Два вида строк и лимит на количество вещей</h2>
+  <div class="prose stack">
+    <p>Строки в списке бывают двух сортов, и разница между ними важнее, чем кажется.</p>
+  </div>
+  <div class="two">
+    <div class="panel">
+      <div class="tag">обычная строка</div>
+      <h3>Основной лут</h3>
+      <p>Шмотки, ресурсы, всё что вы обычно фармите. Эти строки <b>можно вишить</b>, на них действует множитель сакрифайсов, и именно они тратят лимит на количество вещей.</p>
+    </div>
+    <div class="panel">
+      <div class="tag">особая строка</div>
+      <h3>Маунты и коллекционка</h3>
+      <p>Разыгрываются <b>всегда и отдельно</b>: мимо лимита, мимо виша, мимо сакрифайсов. В диалоге виша их даже не показывают. Здесь лежат вещи на 0.005 % и трофеи боссов. В таблицах ниже они <span class="it fx">подсвечены жёлтым<b>%</b></span>.</p>
+    </div>
+  </div>
+  <div class="prose stack">
+    <h3>Лимит</h3>
+    <p>У каждого монстра задано, сколько <b>обычных</b> вещей максимум может выпасть за одну смерть. У Гидры это 5 при десяти строках в списке: даже если кубик благосклонен ко всем десяти, вы получите первые пять. Порядок строк перед розыгрышем перемешивается, так что заранее не известно, какие именно попадут в эту пятёрку.</p>
+    <p>Лимит «0» означает «без лимита» — каждая строка разыгрывается независимо. Так сделано у всех боссов рангов 3–5.</p>
+  </div>
+  <div class="code-aside">В коде: список — это массивы <code>uP[]</code> (id предмета), <code>UP[]</code> (шанс) и <code>wP[]</code> (флаг особой строки), по 15 слотов на моба. Заполняются вызовами <code>lvx()</code> — обычная строка, и <code>lxx()</code> — особая. Вся база в функции <code>lcx()</code>, war3map.j:6588.</div>
+</section>
+
+<section>
+  <div class="eyebrow">Шаг 2 из 5 · доставка</div>
+  <h2>Лут падает на землю или появляется в сундуке</h2>
+  <div class="prose stack">
+    <p>Это принципиальная развилка: от неё зависит, работают ли вообще виши и сакрифайсы.</p>
+  </div>
+  <div class="two">
+    <div class="panel">
+      <div class="tag">на землю</div>
+      <h3>Обычные мобы и мировые боссы</h3>
+      <p>Список разыгрывается <b>один раз на всех</b>, вещи падают под трупом. Кто подобрал — того и вещь. Никаких вишей, сакрифайсов и питомцев здесь нет: работает только базовый шанс и дроп-рейт самого монстра.</p>
+    </div>
+    <div class="panel">
+      <div class="tag">сундук</div>
+      <h3>Боссы с ареной</h3>
+      <p>Список разыгрывается <b>заново для каждого игрока</b> из числа участников боя. Вы не конкурируете за лут: то, что выпало соседу, никак не уменьшает ваши шансы. Именно здесь включаются все персональные множители.</p>
+    </div>
+  </div>
+  <div class="prose stack">
+    <p>Сундуков три вида. <b>Личный</b> — каждый видит только свой список. <b>Личный с публичным списком</b> — все видят, кому что выпало (так у большинства боссов). <b>Общий</b> — список разыгрывается один раз на всю группу, и предмет достаётся тому, кто первым его заберёт; при взятии игра переспрашивает подтверждением. Общий сундук только у двух боссов: <b>Styrix</b> и <b>Kamael</b>.</p>
+    <p>Сундук живёт <b>5 минут</b>. За минуту до исчезновения приходит предупреждение и пинг на миникарте. Открывается он как магазин, по 7 предметов на страницу; остаток лута можно конвертировать в валюту, если это материалы.</p>
+  </div>
+  <div class="note warn"><b>Важное следствие для общего сундука.</b> Раз расчёт идёт один раз на группу, а не на игрока, у Styrix и Kamael <b>не работают ни виши, ни сакрифайсы, ни бонус питомца</b> — весь персональный блок в коде просто пропускается. Остаётся только дроп-рейт монстра.</div>
+</section>
+
+<section>
+  <div class="eyebrow">Шаг 3 из 5 · кто получает</div>
+  <h2>Список участников набирается во время боя</h2>
+  <div class="prose stack">
+    <p>Чтобы вам вообще посчитали сундук, надо попасть в список участников. Игра добавляет туда игрока, если одновременно выполнено:</p>
+    <ul>
+      <li>он жив;</li>
+      <li>его уровень не ниже требуемого — у большинства боссов выше «мирового» ранга это <b>100-й уровень</b>, у мировых боссов требований нет;</li>
+      <li>он либо ударил босса, либо находится в пределах <b>2500</b> от него, либо стоит внутри арены босса.</li>
+    </ul>
+    <p>Проверка идёт раз в секунду на протяжении всего боя, поэтому достаточно один раз оказаться рядом — из списка уже не выкинут. Исключение — пять боссов высшего ранга (Duke, Gaia, Arcane Construct, Styrix, Kamael): у них список набирается только в момент входа босса в бой, а не постоянно.</p>
+    <p>Если к моменту смерти список пуст — сундука не будет вообще.</p>
+  </div>
+  <div class="code-aside">В коде: список — хэш-таблица <code>y6[]</code>, наполняется функцией <code>o1o()</code>. Требование по уровню лежит в <code>WF[]</code> для категории босса, периодичность проверки — во флаге <code>wF[]</code>.</div>
+</section>
+
+<section>
+  <div class="eyebrow">Шаг 4 из 5 · множители</div>
+  <h2>Порядок, в котором базовый процент превращается в итоговый</h2>
+  <div class="prose stack">
+    <p>Множители применяются строго в этом порядке. Каждый следующий умножает то, что получилось на предыдущем шаге.</p>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="b">
+      <div class="t">Дроп-рейт монстра</div>
+      <div class="d">Общий для всех участников. Складывается из размера группы, сложности и глобальных бонусов; отдельные бонусы <b>перемножаются</b> между собой. Итог зажимается в диапазон от −100 % до +650 %.</div>
+      <div class="eq">шанс × (1 + дроп‑рейт)</div>
+    </div></div>
+    <div class="step"><div class="b">
+      <div class="t">Множитель сакрифайсов</div>
+      <div class="d">Только на боссах ранга 4–5, где вообще разрешены виши, и только для обычных строк. Считается лично для вас по тому, кто на вас пожертвовал. От ×1.0 до ×3.0. <b>Работает независимо от того, загадали вы виш или нет.</b></div>
+      <div class="eq">× множитель сакрифайсов <span class="dim">(1.0 … 3.0)</span></div>
+    </div></div>
+    <div class="step"><div class="b">
+      <div class="t">Штраф за отсутствие виша</div>
+      <div class="d">Тоже только ранг 4–5. Если виш не выбран, шанс каждой обычной строки делится на количество обычных строк и умножается на 1.15. У босса с семью строками это ×0.164 — то есть в шесть раз меньше.</div>
+      <div class="eq">× 1.15 ÷ количество обычных строк</div>
+    </div></div>
+    <div class="step"><div class="b">
+      <div class="t">Бонус виша на боссах ранга 3</div>
+      <div class="d">На боссах пониже система устроена проще: загаданный предмет получает ×2.5, а остальные обычные строки у вас не разыгрываются вовсе.</div>
+      <div class="eq">× 2.5 <span class="dim">— только для загаданного предмета</span></div>
+    </div></div>
+    <div class="step"><div class="b">
+      <div class="t">Питомец</div>
+      <div class="d">Активный компаньон даёт ×1.5 на предметы подходящей редкости — и на обычные строки, и на особые. Применяется последним.</div>
+      <div class="eq">× 1.5</div>
+    </div></div>
+  </div>
+  <div class="note"><b>И ещё один фильтр — до всех множителей.</b> Строка вообще участвует в розыгрыше, только если она особая, <b>или</b> у вас не загадан виш, <b>или</b> это ровно та строка, которую вы загадали. Отсюда главное правило: <b>виш выключает все остальные обычные строки</b>. Вы меняете «немного шансов на всё» на «нормальный шанс на одно».</div>
+</section>
+
+<section>
+  <div class="eyebrow">Из чего складывается дроп-рейт монстра</div>
+  <h2>Размер группы, сложность и бонус за полное лобби</h2>
+  <div class="prose stack">
+    <p>Это единственный множитель, одинаковый для всех участников боя. Он висит на самом монстре, а не на игроке. Отдельные слагаемые перемножаются: +50 % и +5 % вместе дают не +55 %, а +57.5 %.</p>
+    <h3>Размер группы</h3>
+    <p>У каждого босса своя «группа масштабирования» с минимумом и максимумом игроков. Пока в списке участников меньше минимума, бонуса нет вообще. Дальше за каждого игрока начиная с минимального начисляется фиксированный шаг.</p>
+  </div>
+  <div class="scroll"><table>
+    <thead><tr><th>Группа</th><th>Игроков</th><th>Шаг за игрока</th><th>Дроп при минимуме</th><th>Дроп при максимуме</th><th>Кто в ней</th></tr></thead>
+    <tbody>
+      <tr><td><code>Dr</code></td><td class="num">—</td><td class="num">0 %</td><td class="num">0 %</td><td class="num">0 %</td><td class="sm">мировые боссы — не масштабируются</td></tr>
+      <tr><td><code>fr</code></td><td class="num">2–5</td><td class="num">12.5 %</td><td class="num">+12.5 %</td><td class="num">+50 %</td><td class="sm">рейды за магические камни</td></tr>
+      <tr><td><code>Fr</code></td><td class="num">2–7</td><td class="num">7.5 %</td><td class="num">+7.5 %</td><td class="num">+45 %</td><td class="sm">Spirit Beast, Flame Nightmare, Turtle Lord</td></tr>
+      <tr><td><code>gr</code></td><td class="num">2–10</td><td class="num">5 %</td><td class="num">+5 %</td><td class="num">+45 %</td><td class="sm">шесть боссов ранга 3</td></tr>
+      <tr><td><code>Gr</code></td><td class="num">4–10</td><td class="num">5 %</td><td class="num">+5 %</td><td class="num">+35 %</td><td class="sm">пять рейд-боссов ранга 4</td></tr>
+      <tr><td><code>hr</code> / <code>Hr</code></td><td class="num">5–10</td><td class="num">5 %</td><td class="num">+5 %</td><td class="num">+30 %</td><td class="sm">Duke, Gaia</td></tr>
+      <tr><td><code>jr</code></td><td class="num">4–6</td><td class="num">7.5 %</td><td class="num">+7.5 %</td><td class="num">+22.5 %</td><td class="sm">Arcane Construct</td></tr>
+      <tr><td><code>Jr</code></td><td class="num">6–10</td><td class="num">20 %</td><td class="num">+20 %</td><td class="num">+100 %</td><td class="sm">Styrix, Kamael</td></tr>
+    </tbody>
+  </table></div>
+  <div class="prose stack">
+    <p>Обычно считаются игроки в списке участников. Но у мировых боссов (<code>Dr</code>) и у Styrix с Kamael (<code>Jr</code>) считаются <b>все игроки 100-го уровня в игре</b>, где бы они ни находились.</p>
+  </div>
+  <div class="cards">
+    <div class="card"><div class="h">Hard</div><div class="v">+50…75 %</div><div class="d">Есть ровно у пяти рейд-боссов ранга 4. Вместе с дропом растут и характеристики босса на 25–33 %.</div></div>
+    <div class="card"><div class="h">Practice</div><div class="v">−100 %</div><div class="d">Босс слабеет на 90 %, но дроп-рейт падает до −100 %: сундук не появится вообще, сколько раз его ни убей.</div></div>
+    <div class="card"><div class="h">6+ игроков в лобби</div><div class="v">+10 %</div><div class="d">Даётся глобально мировым боссам и рейдам групп <code>fr</code> и <code>Fr</code>. На боссов рангов 3–5 не действует.</div></div>
+    <div class="card"><div class="h">Потолок</div><div class="v">+650 %</div><div class="d">Больше система не пропустит: значение обрезается перед расчётом.</div></div>
+  </div>
+  <div class="note warn"><b>Механики, которые обнуляют дроп.</b> Zombie Lord стартует с дроп-рейтом −100 % и становится лутабельным только после второго воскрешения — убийство «раньше времени» не даст ничего. Ещё у двух боссов дроп отключён на время определённых фаз. У Guardian Angel и группового энкаунтера с несколькими юнитами дроп отключён у каждого отдельного юнита, а в конце выдаётся один общий сундук — причём у ангелов с множителем <b>×(количество убитых)</b>.</div>
+</section>
+
+<section>
+  <div class="eyebrow">Виш</div>
+  <h2>Загадать один предмет — и отказаться от остальных</h2>
+  <div class="prose stack">
+    <p>Виш покупается у босс-менеджера рядом с ареной. Выбираете предмет из списка — в диалоге показывают только обычные строки, особые загадать нельзя. Выбор запоминается отдельно на каждого босса и снимается повторной покупкой того же предмета.</p>
+    <p>Механика есть только у 16 боссов — тех, у кого вообще стоит босс-менеджер (ранги 3, 4 и 5, кроме Styrix и Kamael). Что именно даёт виш, зависит от ранга:</p>
+  </div>
+  <div class="two">
+    <div class="panel">
+      <div class="tag">ранг 3</div>
+      <h3>Ровно ×2.5 на загаданное</h3>
+      <p>Загаданный предмет получает шанс в два с половиной раза выше базового. Остальные обычные строки не разыгрываются. Сакрифайсов на этих боссах нет вообще, так что это единственный доступный множитель.</p>
+    </div>
+    <div class="panel">
+      <div class="tag">ранг 4–5</div>
+      <h3>Снятие штрафа, а не бонус</h3>
+      <p>Здесь виш не увеличивает шанс, а <b>убирает деление</b>. Без виша каждая строка идёт с коэффициентом 1.15 ÷ количество строк. С вишем загаданная строка идёт с полным базовым шансом — и уже на неё умножаются сакрифайсы.</p>
+    </div>
+  </div>
+  <div class="note"><b>Насколько это много.</b> У Death Fiend семь обычных строк. Без виша каждая идёт с коэффициентом 1.15 ÷ 7 ≈ <b>0.16</b>, с вишем — <b>1.0</b>. То есть по нужному предмету виш даёт ровно <b>×6.1</b>, и это ещё до сакрифайсов. Играть на рангах 4–5 без виша практически бессмысленно — если, конечно, вам не всё равно, что именно упадёт.</div>
+</section>
+
+<section>
+  <div class="eyebrow">Сакрифайс</div>
+  <h2>Отдать свой лут, чтобы поднять чужой шанс</h2>
+  <div class="prose stack">
+    <p>Тоже покупается у босс-менеджера, но существует <b>только на боссах рангов 4 и 5</b>. Вы выбираете, кому отдаёте свой шанс: конкретному игроку или «всем». На себя нельзя.</p>
+    <p><b>Цена вопроса.</b> Тот, кто пожертвовал, теряет весь обычный лут с этого босса — у него разыгрываются только особые строки. Это не штраф к шансу, а полное исключение из розыгрыша.</p>
+    <h3>Как считается множитель</h3>
+    <p>Расчёт идёт лично для каждого нежертвующего игрока. Стартует с ×1.0:</p>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="b">
+      <div class="t">Каждый, кто пожертвовал лично вам</div>
+      <div class="d">Самый эффективный вариант. Прибавка фиксированная и ни с кем не делится.</div>
+      <div class="eq">+ 0.8 <span class="dim">за каждого</span></div>
+    </div></div>
+    <div class="step"><div class="b">
+      <div class="t">Те, кто пожертвовал «всем»</div>
+      <div class="d">Их вклад складывается и делится между всеми, кто сам не жертвует. Двое «на всех» при трёх нежертвующих дают каждому +0.53, а не +1.6.</div>
+      <div class="eq">+ 0.8 × количество ÷ количество нежертвующих</div>
+    </div></div>
+    <div class="step"><div class="b">
+      <div class="t">Компенсация за неполную группу</div>
+      <div class="d">Если участников меньше, чем «минимум группы минус один», недостающие места засчитываются как бесплатные сакрифайсы «на всех». Игра сама доплачивает за отсутствующих.</div>
+      <div class="eq">недостающие места → считаются как «всем»</div>
+    </div></div>
+    <div class="step"><div class="b">
+      <div class="t">Обрезка</div>
+      <div class="d">Итог зажимается между ×1.0 и ×3.0. Четвёртый адресный сакрифайс уже ничего не даёт.</div>
+      <div class="eq">итог = min(результат, <b>3.0</b>)</div>
+    </div></div>
+  </div>
+  <div class="cards">
+    <div class="card"><div class="h">Соло на рейд-боссе группы Gr</div><div class="v">×2.6</div><div class="d">Минимум группы 4, вы один: компенсация за два недостающих места, делённая на одного нежертвующего — вас. 1 + 0.8×2 = 2.6.</div></div>
+    <div class="card"><div class="h">Вчетвером, трое на вас</div><div class="v">×3.0</div><div class="d">1 + 0.8×3 = 3.4, обрезается до потолка. Трое остаются без обычного лута.</div></div>
+    <div class="card"><div class="h">Вчетвером, все «на всех»</div><div class="v">×1.0</div><div class="d">Если жертвуют все, нежертвующих нет — раздавать бонус некому. Классическая ошибка: группа теряет лут и не получает ничего взамен.</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Полный расчёт</div>
+  <h2>Один и тот же предмет в двух ситуациях</h2>
+  <div class="prose stack">
+    <p>Возьмём Death Fiend — рейд-босс ранга 4, группа <code>Gr</code> (минимум 4 игрока), семь обычных строк в списке. Считаем строку с базовым шансом <b>3 %</b>.</p>
+    <h3>Ситуация А: соло, обычная сложность, виш не загадан</h3>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="b">
+      <div class="t">Дроп-рейт монстра — нулевой</div>
+      <div class="d">В списке участников один игрок, минимум группы — четыре. Порог не пройден, бонус за размер группы не начисляется. Сложность обычная.</div>
+      <div class="eq">3 % × 1.0 = <span class="res">3 %</span></div>
+    </div></div>
+    <div class="step"><div class="b">
+      <div class="t">Сакрифайсы — работают даже в соло</div>
+      <div class="d">Не хватает двух игроков до «минимум минус один», они засчитываются как жертвы «на всех». Нежертвующий один — вы.</div>
+      <div class="eq">1 + 0.8 × 2 ÷ 1 = 2.6 → 3 % × 2.6 = <span class="res">7.8 %</span></div>
+    </div></div>
+    <div class="step"><div class="b">
+      <div class="t">Штраф за отсутствие виша</div>
+      <div class="d">Семь обычных строк, виш не выбран — делим.</div>
+      <div class="eq">7.8 % × 1.15 ÷ 7 = <span class="res">1.28 %</span></div>
+    </div></div>
+  </div>
+  <div class="prose stack">
+    <h3>Ситуация Б: вчетвером, Hard, вы загадали этот предмет, трое пожертвовали вам</h3>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="b">
+      <div class="t">Дроп-рейт монстра</div>
+      <div class="d">Четыре игрока — это минимум группы <code>Gr</code>, даёт +5 %. Hard даёт +50 %. Бонусы перемножаются.</div>
+      <div class="eq">1.05 × 1.50 = 1.575 → 3 % × 1.575 = <span class="res">4.73 %</span></div>
+    </div></div>
+    <div class="step"><div class="b">
+      <div class="t">Сакрифайсы</div>
+      <div class="d">Трое указали лично вас: 1 + 0.8×3 = 3.4, обрезается до потолка 3.0.</div>
+      <div class="eq">4.73 % × 3.0 = <span class="res">14.18 %</span></div>
+    </div></div>
+    <div class="step"><div class="b">
+      <div class="t">Виш загадан — деления нет</div>
+      <div class="d">Шаг со штрафом пропускается. Остальные шесть обычных строк у вас в этом бою не разыгрываются вообще.</div>
+      <div class="eq">14.18 % <span class="dim">без изменений</span></div>
+    </div></div>
+    <div class="step"><div class="b">
+      <div class="t">Питомец, если предмет подходит по редкости</div>
+      <div class="d">Компаньон нужного тира добавляет половину сверху.</div>
+      <div class="eq">14.18 % × 1.5 = <span class="res">21.3 %</span></div>
+    </div></div>
+  </div>
+  <div class="note"><b>Итог: 1.28 % против 21.3 % — разница почти в 17 раз</b> на одном и том же боссе и одной и той же строке. Но заплатили за это трое: у них с этого убийства не разыграется ни одна обычная строка.</div>
+</section>
+
+<section>
+  <div class="eyebrow">Шаг 5 из 5 · питомцы</div>
+  <h2>+50 % к шансу, но только по редкости предмета</h2>
+  <div class="prose stack">
+    <p>Активный компаньон даёт персональные ×1.5. Действует и на обычные, и на особые строки, но <b>только на предметы подходящей редкости</b>. Редкости в карте идут по зонам: 4 — Deltirama, 5 — Neptinos, 6 — Gnosis, 7 — Alteia, 8 — Arcana.</p>
+  </div>
+  <div class="scroll"><table>
+    <thead><tr><th>Питомец</th><th>Тир</th><th>На что действует</th><th>Как получить</th></tr></thead>
+    <tbody>
+      <tr><td><code>I0MD</code></td><td class="num">3</td><td>эпики редкости <span style="color:var(--r4)">4</span>–<span style="color:var(--r6)">6</span> — Deltirama … Gnosis</td><td class="sm">крафт из шести питомцев тира 3</td></tr>
+      <tr><td><code>I02T</code></td><td class="num">4</td><td>эпики редкости <span style="color:var(--r4)">4</span>–<span style="color:var(--r7)">7</span> — Deltirama … Alteia</td><td class="sm">I0MD + питомцы пяти рейд-боссов</td></tr>
+      <tr><td><code>I03X</code></td><td class="num">5</td><td>эпики <span style="color:var(--r4)">4</span>–<span style="color:var(--r7)">7</span> <b>плюс любой</b> дроп с Duke, Gaia и Arcane Construct</td><td class="sm">I02T + по 5 трофеев с этих троих</td></tr>
+      <tr><td><code>I042</code></td><td class="num">5</td><td class="dim">в коде не проверяется — бонус не работает</td><td class="sm dim">рецепта в скрипте нет</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note warn"><b>Похоже на баг карты.</b> У питомца <code>I042</code> в описании написано «Drop rate up to Arcane Construct +50 %», но в функции расчёта проверяются только <code>I0MD</code>, <code>I02T</code> и <code>I03X</code>. Апгрейд на <code>I042</code> молча убирает бонус к дропу — при том, что по остальным характеристикам это самый сильный компаньон.</div>
+</section>
+
+<section>
+  <div class="eyebrow">Классификация</div>
+  <h2>«Тип босса» — это четыре независимых параметра</h2>
+  <div class="prose stack">
+    <p>В карте нет единой шкалы «мировой / рейдовый / эпический». Есть четыре характеристики, и они комбинируются почти произвольно — например, босс ранга 1 может ронять лут и на землю, и в сундук.</p>
+  </div>
+  <div class="scroll"><table>
+    <thead><tr><th>Параметр</th><th>Значения</th><th>На что влияет</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Ранг</b><br><span class="dim">в таблицах: <code>DP</code></span></td>
+        <td class="sm"><span class="tier t0">0</span> <span class="tier t1">1</span> <span class="tier t2">2</span> <span class="tier t3">3</span> <span class="tier t4">4</span> <span class="tier t5">5</span></td>
+        <td>Главное — математика виша и сакрифайса. Ранги 0–2: ни того, ни другого. Ранг 3: виш ×2.5. Ранги 4–5: виш снимает деление, есть сакрифайсы. Ранг 5 вдобавок не выдаёт Challenger's Potion.</td>
+      </tr>
+      <tr>
+        <td><b>Категория</b><br><span class="dim"><code>QP</code></span></td>
+        <td class="sm"><code>Rr</code> <code>Ir</code> <code>Ar</code> <code>Nr</code> <code>br</code></td>
+        <td>Порог входа в список лута. <code>Rr</code> — без требований по уровню, остальные — 100-й уровень. У <code>br</code> список набирается только в момент входа босса в бой.</td>
+      </tr>
+      <tr>
+        <td><b>Группа</b><br><span class="dim"><code>sP</code></span></td>
+        <td class="sm"><code>Dr</code> <code>fr</code> <code>Fr</code> <code>gr</code> <code>Gr</code> <code>hr</code> <code>Hr</code> <code>jr</code> <code>Jr</code></td>
+        <td>Минимум и максимум игроков, прирост здоровья и дроп-рейта за каждого. Она же участвует в компенсации за неполную группу при сакрифайсах.</td>
+      </tr>
+      <tr>
+        <td><b>Выдача</b><br><span class="dim"><code>lP</code></span></td>
+        <td class="sm">земля · личный · публичный · общий</td>
+        <td>Где окажется лут и работают ли персональные множители. Только сундук даёт индивидуальный расчёт.</td>
+      </tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <div class="eyebrow">Справочник</div>
+  <h2>Полные дроп-таблицы: 42 босса</h2>
+  <div class="prose stack">
+    <p>Проценты <b>базовые</b> — до всех множителей. <span class="it fx">Жёлтым<b>%</b></span> отмечены особые строки: вне лимита, не вишатся, не получают сакрифайсы. Имена восстановлены по иконкам питомцев, рецептам крафта и трофеям; прочерк означает, что имя в скрипте не встречается — оно лежит в редакторе объектов, которого в файле нет.</p>
+  </div>
+  <div class="scroll"><table>
+    <thead><tr>
+      <th>Босс</th><th>Ранг</th><th>Кат.</th><th>Группа</th><th>Лут</th><th>Лимит</th><th>Виш</th><th>Сакр.</th><th>Hard</th><th>Practice</th><th>Обычные строки</th><th>Особые строки</th>
+    </tr></thead>
+    <tbody>
+<tr>
+<td class="id"><code>h00T</code><span class="nm"></span></td>
+<td class="c"><span class="tier t0">DP 0</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>Dr</code></td>
+<td class="c sm">на землю</td>
+<td class="c num">2</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I05R<b>25%</b></span> <span class="it">I05S<b>25%</b></span> <span class="it">I09G<b>25%</b></span> <span class="it">I0F0<b>25%</b></span></td>
+<td class="drops"><span class="it fx">sor1<b>25%</b></span> <span class="it fx">sand<b>0.01%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n02L</code><span class="nm"></span></td>
+<td class="c"><span class="tier t0">DP 0</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>Dr</code></td>
+<td class="c sm">на землю</td>
+<td class="c num">2</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I0BQ<b>25%</b></span> <span class="it">I0CB<b>25%</b></span> <span class="it">I0BS<b>25%</b></span> <span class="it">I0BR<b>25%</b></span> <span class="it">I0C3<b>25%</b></span> <span class="it">I0BT<b>25%</b></span></td>
+<td class="drops"><span class="dim">—</span></td>
+</tr>
+<tr>
+<td class="id"><code>n03Y</code><span class="nm"></span></td>
+<td class="c"><span class="tier t0">DP 0</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>Dr</code></td>
+<td class="c sm">на землю</td>
+<td class="c num">2</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">rspl<b>25%</b></span> <span class="it">rhe1<b>25%</b></span> <span class="it">rspd<b>25%</b></span> <span class="it">I0BR<b>25%</b></span> <span class="it">I0C3<b>25%</b></span> <span class="it">I0BT<b>25%</b></span></td>
+<td class="drops"><span class="dim">—</span></td>
+</tr>
+<tr>
+<td class="id"><code>n01J</code><span class="nm">Ragnaar</span></td>
+<td class="c"><span class="tier t1">DP 1</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>Dr</code></td>
+<td class="c sm">на землю</td>
+<td class="c num">2</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I05U<b>25%</b></span> <span class="it">I05W<b>25%</b></span> <span class="it">I09E<b>25%</b></span> <span class="it">I0F4<b>25%</b></span></td>
+<td class="drops"><span class="it fx">dsum<b>25%</b></span> <span class="it fx">I0G5<b>1%</b></span> <span class="it fx">nspi<b>0.01%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n02Z</code><span class="nm"></span></td>
+<td class="c"><span class="tier t0">DP 0</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>Dr</code></td>
+<td class="c sm">на землю</td>
+<td class="c num">2</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">shcw<b>25%</b></span> <span class="it">rnec<b>25%</b></span> <span class="it">bfhr<b>25%</b></span> <span class="it">stwa<b>25%</b></span> <span class="it">blba<b>25%</b></span></td>
+<td class="drops"><span class="dim">—</span></td>
+</tr>
+<tr>
+<td class="id"><code>h014</code><span class="nm">Tentacle Lord</span></td>
+<td class="c"><span class="tier t1">DP 1</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>Dr</code></td>
+<td class="c sm">на землю</td>
+<td class="c num">2</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I0BN<b>25%</b></span> <span class="it">I0BP<b>25%</b></span> <span class="it">I0BO<b>25%</b></span> <span class="it">I0F6<b>25%</b></span></td>
+<td class="drops"><span class="it fx">I0BZ<b>12.5%</b></span> <span class="it fx">I0BY<b>12.5%</b></span> <span class="it fx">I0G6<b>1%</b></span> <span class="it fx">gvsm<b>0.01%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h07P</code><span class="nm"></span></td>
+<td class="c"><span class="tier t0">DP 0</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>Dr</code></td>
+<td class="c sm">на землю</td>
+<td class="c num">2</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I0OS<b>25%</b></span> <span class="it">I0OT<b>25%</b></span> <span class="it">I0OU<b>25%</b></span> <span class="it">I0OV<b>25%</b></span></td>
+<td class="drops"><span class="dim">—</span></td>
+</tr>
+<tr>
+<td class="id"><code>h00Y</code><span class="nm">Giant Golem</span></td>
+<td class="c"><span class="tier t1">DP 1</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>Dr</code></td>
+<td class="c sm">на землю</td>
+<td class="c num">2</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I0A7<b>25%</b></span> <span class="it">I0A8<b>25%</b></span> <span class="it">I0A9<b>25%</b></span> <span class="it">I0F5<b>25%</b></span></td>
+<td class="drops"><span class="it fx">I0AA<b>12.5%</b></span> <span class="it fx">I0AB<b>12.5%</b></span> <span class="it fx">I0G7<b>1%</b></span> <span class="it fx">dtsb<b>0.01%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h010</code><span class="nm">Mana Ancient</span></td>
+<td class="c"><span class="tier t1">DP 1</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>Dr</code></td>
+<td class="c sm">на землю</td>
+<td class="c num">∞</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I08X<b>10%</b></span> <span class="it">I06D<b>10%</b></span> <span class="it">I0AV<b>10%</b></span> <span class="it">I06E<b>10%</b></span> <span class="it">I0G9<b>1%</b></span> <span class="it">grsl<b>0.05%</b></span> <span class="it">envl<b>0.01%</b></span></td>
+<td class="drops"><span class="dim">—</span></td>
+</tr>
+<tr>
+<td class="id"><code>n038</code><span class="nm">Mad Clown</span></td>
+<td class="c"><span class="tier t2">DP 2</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>fr</code></td>
+<td class="c sm">сундук (личный)</td>
+<td class="c num">∞</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">sor2<b>5%</b></span> <span class="it">sora<b>5%</b></span> <span class="it">ram1<b>5%</b></span> <span class="it">soul<b>5%</b></span> <span class="it">I0GA<b>0.5%</b></span> <span class="it">wcyc<b>0.005%</b></span></td>
+<td class="drops"><span class="dim">—</span></td>
+</tr>
+<tr>
+<td class="id"><code>n022</code><span class="nm">Hydra</span></td>
+<td class="c"><span class="tier t1">DP 1</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>fr</code></td>
+<td class="c sm">сундук (личный)</td>
+<td class="c num">5</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I077<b>12.5%</b></span> <span class="it">I07A<b>12.5%</b></span> <span class="it">I09D<b>12.5%</b></span> <span class="it">I0F2<b>12.5%</b></span> <span class="it">I074<b>12.5%</b></span> <span class="it">I072<b>12.5%</b></span> <span class="it">I075<b>12.5%</b></span> <span class="it">I073<b>12.5%</b></span> <span class="it">I068<b>20%</b></span> <span class="it">I06I<b>20%</b></span></td>
+<td class="drops"><span class="it fx">oven<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>H00F</code><span class="nm">Count of Wallachia</span></td>
+<td class="c"><span class="tier t1">DP 1</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>fr</code></td>
+<td class="c sm">сундук (личный)</td>
+<td class="c num">5</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">ajen<b>7.5%</b></span> <span class="it">I07I<b>7.5%</b></span> <span class="it">moon<b>7.5%</b></span> <span class="it">I07K<b>7.5%</b></span> <span class="it">I07L<b>7.5%</b></span> <span class="it">I07E<b>7.5%</b></span> <span class="it">I07H<b>7.5%</b></span> <span class="it">I06J<b>12.5%</b></span> <span class="it">I07G<b>12.5%</b></span></td>
+<td class="drops"><span class="it fx">shen<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n01W</code><span class="nm">—</span></td>
+<td class="c"><span class="tier t1">DP 1</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>fr</code></td>
+<td class="c sm">сундук (личный)</td>
+<td class="c num">3</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I07O<b>7.5%</b></span> <span class="it">I07M<b>7.5%</b></span> <span class="it">I0AY<b>7.5%</b></span> <span class="it">cnob<b>7.5%</b></span> <span class="it">I060<b>15%</b></span></td>
+<td class="drops"><span class="it fx">sfog<b>0.25%</b></span> <span class="it fx">drph<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h01B</code><span class="nm">Mage Lord</span></td>
+<td class="c"><span class="tier t1">DP 1</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>fr</code></td>
+<td class="c sm">сундук (личный)</td>
+<td class="c num">4</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I06F<b>7.5%</b></span> <span class="it">I083<b>7.5%</b></span> <span class="it">I084<b>7.5%</b></span> <span class="it">I0AZ<b>7.5%</b></span> <span class="it">I062<b>12.5%</b></span> <span class="it">I06V<b>12.5%</b></span></td>
+<td class="drops"><span class="it fx">cosl<b>0.25%</b></span> <span class="it fx">lnrn<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n01K</code><span class="nm">Wings of Death</span></td>
+<td class="c"><span class="tier t1">DP 1</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>fr</code></td>
+<td class="c sm">сундук (личный)</td>
+<td class="c num">5</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I07R<b>7.5%</b></span> <span class="it">I09S<b>7.5%</b></span> <span class="it">I07T<b>7.5%</b></span> <span class="it">I0F8<b>7.5%</b></span> <span class="it">I07U<b>7.5%</b></span> <span class="it">I07X<b>7.5%</b></span> <span class="it">I06P<b>12.5%</b></span> <span class="it">I06Q<b>12.5%</b></span> <span class="it">I06O<b>12.5%</b></span></td>
+<td class="drops"><span class="it fx">oli2<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>H00V</code><span class="nm">—</span></td>
+<td class="c"><span class="tier t1">DP 1</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>fr</code></td>
+<td class="c sm">сундук (личный)</td>
+<td class="c num">∞</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I0BJ<b>10%</b></span> <span class="it">I0FZ<b>0.5%</b></span></td>
+<td class="drops"><span class="it fx">amrc<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n01N</code><span class="nm">Guardian Angel</span></td>
+<td class="c"><span class="tier t1">DP 1</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>fr</code></td>
+<td class="c sm">сундук (личный)</td>
+<td class="c num">4</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I085<b>2.5%</b></span> <span class="it">I087<b>2.5%</b></span> <span class="it">I0FA<b>2.5%</b></span> <span class="it">I088<b>2.5%</b></span> <span class="it">I089<b>2.5%</b></span> <span class="it">I06R<b>5%</b></span> <span class="it">I06T<b>5%</b></span></td>
+<td class="drops"><span class="it fx">tmmt<b>0.0015%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n01O</code><span class="nm">Corrupt Angel</span></td>
+<td class="c"><span class="tier t1">DP 1</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>fr</code></td>
+<td class="c sm">сундук (личный)</td>
+<td class="c num">4</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I0C4<b>7.5%</b></span> <span class="it">I086<b>7.5%</b></span> <span class="it">I08C<b>7.5%</b></span> <span class="it">I09O<b>7.5%</b></span> <span class="it">I06S<b>12.5%</b></span> <span class="it">I06U<b>12.5%</b></span> <span class="it">I0AB<b>12.5%</b></span></td>
+<td class="drops"><span class="it fx">mnsf<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n023</code><span class="nm">Everfrost / Spider Queen</span></td>
+<td class="c"><span class="tier t2">DP 2</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>fr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">4</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I08D<b>7.5%</b></span> <span class="it">I08R<b>7.5%</b></span> <span class="it">I097<b>7.5%</b></span> <span class="it">I099<b>7.5%</b></span> <span class="it">I06X<b>10%</b></span> <span class="it">I06K<b>10%</b></span></td>
+<td class="drops"><span class="it fx">olig<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>H01F</code><span class="nm">Everfrost / Spider Queen</span></td>
+<td class="c"><span class="tier t2">DP 2</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>fr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">4</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I08D<b>7.5%</b></span> <span class="it">I08R<b>7.5%</b></span> <span class="it">I097<b>7.5%</b></span> <span class="it">I099<b>7.5%</b></span> <span class="it">I06X<b>10%</b></span> <span class="it">I06K<b>10%</b></span></td>
+<td class="drops"><span class="it fx">stre<b>0.01%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h034</code><span class="nm">Frostspider Lord</span></td>
+<td class="c"><span class="tier t2">DP 2</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>fr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">4</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I067<b>5%</b></span> <span class="it">I098<b>7.5%</b></span> <span class="it">I096<b>7.5%</b></span> <span class="it">bspd<b>5%</b></span> <span class="it">I06X<b>5%</b></span> <span class="it">I06K<b>5%</b></span> <span class="it">I061<b>10%</b></span></td>
+<td class="drops"><span class="it fx">klmm<b>0.25%</b></span> <span class="it fx">tst2<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n01Y</code><span class="nm">Demon Lord Beriel</span></td>
+<td class="c"><span class="tier t2">DP 2</span></td>
+<td class="c"><code>Rr</code></td>
+<td class="c"><code>fr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">4</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">kysn<b>5%</b></span> <span class="it">I0FG<b>5%</b></span> <span class="it">I0B6<b>7.5%</b></span> <span class="it">ches<b>7.5%</b></span> <span class="it">dphe<b>7.5%</b></span> <span class="it">I06W<b>10%</b></span> <span class="it">I08K<b>10%</b></span></td>
+<td class="drops"><span class="it fx">fgsk<b>0.1%</b></span> <span class="it fx">wswd<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n02M</code><span class="nm">Spirit Beast</span></td>
+<td class="c"><span class="tier t2">DP 2</span></td>
+<td class="c"><code>Ir</code></td>
+<td class="c"><code>Fr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">3</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">odef<b>5%</b></span> <span class="it">rag1<b>5%</b></span> <span class="it">afac<b>5%</b></span> <span class="it">grsl<b>5%</b></span> <span class="it">I0JT<b>5%</b></span> <span class="it">I0G8<b>0.5%</b></span></td>
+<td class="drops"><span class="it fx">ccmd<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>hmpr</code><span class="nm">группа из 4 юнитов</span></td>
+<td class="c"><span class="tier t2">DP 2</span></td>
+<td class="c"><code>Ir</code></td>
+<td class="c"><code>Fr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">5</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">phlt<b>3.75%</b></span> <span class="it">kpin<b>3.75%</b></span> <span class="it">rwiz<b>2.5%</b></span> <span class="it">rin1<b>3.75%</b></span> <span class="it">I0FH<b>3.75%</b></span> <span class="it">mcou<b>3.75%</b></span> <span class="it">evtl<b>3.75%</b></span> <span class="it">stpg<b>5%</b></span> <span class="it">whwd<b>5%</b></span></td>
+<td class="drops"><span class="it fx">rugt<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n02N</code><span class="nm">Flame Nightmare</span></td>
+<td class="c"><span class="tier t2">DP 2</span></td>
+<td class="c"><code>Ir</code></td>
+<td class="c"><code>Fr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">4</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I0CA<b>5%</b></span> <span class="it">ssan<b>5%</b></span> <span class="it">I0C6<b>5%</b></span> <span class="it">I0C7<b>2.5%</b></span> <span class="it">I0C8<b>5%</b></span> <span class="it">rej1<b>5%</b></span> <span class="it">I0CD<b>5%</b></span></td>
+<td class="drops"><span class="it fx">shdt<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h018</code><span class="nm">Turtle Lord</span></td>
+<td class="c"><span class="tier t2">DP 2</span></td>
+<td class="c"><code>Ir</code></td>
+<td class="c"><code>Fr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">4</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">skul<b>5%</b></span> <span class="it">I0CR<b>5%</b></span> <span class="it">I0CP<b>5%</b></span> <span class="it">I0CG<b>5%</b></span> <span class="it">crdt<b>2.5%</b></span> <span class="it">I0CJ<b>5%</b></span> <span class="it">sror<b>5%</b></span> <span class="it">I0CK<b>5%</b></span></td>
+<td class="drops"><span class="it fx">wshs<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n03S</code><span class="nm">Bone Dragon</span></td>
+<td class="c"><span class="tier t3">DP 3</span></td>
+<td class="c"><code>Ar</code></td>
+<td class="c"><code>gr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">sreg<b>1.75%</b></span> <span class="it">pinv<b>1.75%</b></span> <span class="it">tret<b>2.5%</b></span> <span class="it">btst<b>2.5%</b></span> <span class="it">I0M7<b>0.25%</b></span></td>
+<td class="drops"><span class="it fx">I0NZ<b>1.5%</b></span> <span class="it fx">rre1<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n02V</code><span class="nm">Skeleton King</span></td>
+<td class="c"><span class="tier t3">DP 3</span></td>
+<td class="c"><code>Ar</code></td>
+<td class="c"><code>gr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">ratc<b>1.25%</b></span> <span class="it">rat6<b>1.25%</b></span> <span class="it">ward<b>1.75%</b></span> <span class="it">rat9<b>1.75%</b></span> <span class="it">nflg<b>2.5%</b></span> <span class="it">gsou<b>2.5%</b></span> <span class="it">I0EL<b>2.5%</b></span></td>
+<td class="drops"><span class="it fx">I0NZ<b>1.5%</b></span> <span class="it fx">fgrg<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n033</code><span class="nm">Zombie Lord</span></td>
+<td class="c"><span class="tier t3">DP 3</span></td>
+<td class="c"><code>Ar</code></td>
+<td class="c"><code>gr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">belv<b>1.75%</b></span> <span class="it">crys<b>1.75%</b></span> <span class="it">stel<b>1.25%</b></span> <span class="it">I0AS<b>2.5%</b></span> <span class="it">rde1<b>2.5%</b></span> <span class="it">I08P<b>2.5%</b></span></td>
+<td class="drops"><span class="it fx">I0NZ<b>1.75%</b></span> <span class="it fx">pomn<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n030</code><span class="nm">Ancient Ent</span></td>
+<td class="c"><span class="tier t3">DP 3</span></td>
+<td class="c"><code>Ar</code></td>
+<td class="c"><code>gr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">pgin<b>1.75%</b></span> <span class="it">srtl<b>1.75%</b></span> <span class="it">I0D2<b>1.25%</b></span> <span class="it">ofir<b>2.5%</b></span> <span class="it">shtm<b>2.5%</b></span></td>
+<td class="drops"><span class="it fx">I0NZ<b>1.75%</b></span> <span class="it fx">pres<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>o000</code><span class="nm">—</span></td>
+<td class="c"><span class="tier t3">DP 3</span></td>
+<td class="c"><code>Ar</code></td>
+<td class="c"><code>gr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I0EG<b>1.25%</b></span> <span class="it">I0E5<b>2.5%</b></span> <span class="it">I0E7<b>2.5%</b></span> <span class="it">I0E6<b>2.5%</b></span></td>
+<td class="drops"><span class="it fx">I0NZ<b>2%</b></span> <span class="it fx">sneg<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>n02Y</code><span class="nm">Shadow Dragon</span></td>
+<td class="c"><span class="tier t3">DP 3</span></td>
+<td class="c"><code>Ar</code></td>
+<td class="c"><code>gr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">kymn<b>1%</b></span> <span class="it">bzbf<b>1.5%</b></span> <span class="it">shwd<b>1.5%</b></span> <span class="it">mcri<b>2.5%</b></span> <span class="it">I08N<b>2.5%</b></span> <span class="it">I09N<b>2.5%</b></span></td>
+<td class="drops"><span class="it fx">I0NZ<b>2.5%</b></span> <span class="it fx">shar<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h01K</code><span class="nm">Death Fiend</span></td>
+<td class="c"><span class="tier t4">DP 4</span></td>
+<td class="c"><code>Nr</code></td>
+<td class="c"><code>Gr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">да</td>
+<td class="c sm">+50%</td>
+<td class="c sm">да</td>
+<td class="drops"><span class="it">srbd<b>2%</b></span> <span class="it">oslo<b>2.5%</b></span> <span class="it">sprn<b>2.5%</b></span> <span class="it">ledg<b>2.5%</b></span> <span class="it">I0DG<b>3%</b></span> <span class="it">kygh<b>3%</b></span> <span class="it">I0QH<b>0.75%</b></span></td>
+<td class="drops"><span class="it fx">I0O0<b>0.8%</b></span> <span class="it fx">infs<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h04O</code><span class="nm">Valtora</span></td>
+<td class="c"><span class="tier t4">DP 4</span></td>
+<td class="c"><code>Nr</code></td>
+<td class="c"><code>Gr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">да</td>
+<td class="c sm">+50%</td>
+<td class="c sm">да</td>
+<td class="drops"><span class="it">ocor<b>2.5%</b></span> <span class="it">I0IG<b>3%</b></span> <span class="it">I0IH<b>3%</b></span> <span class="it">phea<b>2%</b></span> <span class="it">I02E<b>0.75%</b></span></td>
+<td class="drops"><span class="it fx">I0O0<b>0.8%</b></span> <span class="it fx">I0P0<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h060</code><span class="nm">Ifrit</span></td>
+<td class="c"><span class="tier t4">DP 4</span></td>
+<td class="c"><code>Nr</code></td>
+<td class="c"><code>Gr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">да</td>
+<td class="c sm">+50%</td>
+<td class="c sm">да</td>
+<td class="drops"><span class="it">I0JS<b>2.5%</b></span> <span class="it">I0IE<b>3%</b></span> <span class="it">I0IF<b>3%</b></span> <span class="it">phea<b>2.5%</b></span> <span class="it">I02D<b>0.75%</b></span></td>
+<td class="drops"><span class="it fx">I0O0<b>0.9%</b></span> <span class="it fx">I0P1<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h06T</code><span class="nm">Nereid</span></td>
+<td class="c"><span class="tier t4">DP 4</span></td>
+<td class="c"><code>Nr</code></td>
+<td class="c"><code>Gr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">да</td>
+<td class="c sm">+75%</td>
+<td class="c sm">да</td>
+<td class="drops"><span class="it">I0LX<b>2.5%</b></span> <span class="it">I0II<b>3%</b></span> <span class="it">I0IJ<b>3%</b></span> <span class="it">phea<b>3%</b></span> <span class="it">I002<b>0.75%</b></span></td>
+<td class="drops"><span class="it fx">I0O0<b>1%</b></span> <span class="it fx">I0P2<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h077</code><span class="nm">Agareth</span></td>
+<td class="c"><span class="tier t4">DP 4</span></td>
+<td class="c"><code>Nr</code></td>
+<td class="c"><code>Gr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">да</td>
+<td class="c sm">+75%</td>
+<td class="c sm">да</td>
+<td class="drops"><span class="it">I0O3<b>2%</b></span> <span class="it">I0NV<b>2.5%</b></span> <span class="it">I0NU<b>2.5%</b></span> <span class="it">I0NW<b>2.5%</b></span> <span class="it">I02S<b>0.75%</b></span></td>
+<td class="drops"><span class="it fx">I0O0<b>1.25%</b></span> <span class="it fx">I0P3<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h08K</code><span class="nm">Duke</span></td>
+<td class="c"><span class="tier t5">DP 5</span></td>
+<td class="c"><code>br</code></td>
+<td class="c"><code>hr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">да</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I014<b>1.2%</b></span> <span class="it">I0R2<b>1.5%</b></span> <span class="it">I0R4<b>1.5%</b></span> <span class="it">I0R3<b>1.5%</b></span></td>
+<td class="drops"><span class="it fx">I0O2<b>0.25%</b></span> <span class="it fx">I0R6<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h09B</code><span class="nm">Gaia</span></td>
+<td class="c"><span class="tier t5">DP 5</span></td>
+<td class="c"><code>br</code></td>
+<td class="c"><code>Hr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">да</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I01Z<b>0.9%</b></span> <span class="it">I05Q<b>1.2%</b></span> <span class="it">I09R<b>1.2%</b></span> <span class="it">I05P<b>1.2%</b></span></td>
+<td class="drops"><span class="it fx">I0LY<b>0.2%</b></span> <span class="it fx">I0R7<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h09V</code><span class="nm">Arcane Construct</span></td>
+<td class="c"><span class="tier t5">DP 5</span></td>
+<td class="c"><code>br</code></td>
+<td class="c"><code>jr</code></td>
+<td class="c sm">сундук (личный, список виден всем)</td>
+<td class="c num">∞</td>
+<td class="c sm">да</td>
+<td class="c sm">да</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I095<b>0.6%</b></span> <span class="it">I0LP<b>0.8%</b></span> <span class="it">I0O1<b>0.8%</b></span></td>
+<td class="drops"><span class="it fx">I02W<b>0.15%</b></span> <span class="it fx">I0GH<b>0.005%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h0A1</code><span class="nm">Styrix</span></td>
+<td class="c"><span class="tier t5">DP 5</span></td>
+<td class="c"><code>br</code></td>
+<td class="c"><code>Jr</code></td>
+<td class="c sm">сундук (общий)</td>
+<td class="c num">∞</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">rlif<b>0.4%</b></span> <span class="it">I02V<b>0.6%</b></span> <span class="it">I05K<b>0.6%</b></span> <span class="it">I05H<b>0.6%</b></span></td>
+<td class="drops"><span class="it fx">I0M0<b>0.15%</b></span> <span class="it fx">I0QE<b>0.01%</b></span></td>
+</tr>
+<tr>
+<td class="id"><code>h0AB</code><span class="nm">Kamael</span></td>
+<td class="c"><span class="tier t5">DP 5</span></td>
+<td class="c"><code>br</code></td>
+<td class="c"><code>Jr</code></td>
+<td class="c sm">сундук (общий)</td>
+<td class="c num">∞</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="c sm">—</td>
+<td class="drops"><span class="it">I023<b>0.4%</b></span> <span class="it">I02N<b>0.6%</b></span> <span class="it">I02O<b>0.6%</b></span> <span class="it">I02P<b>0.6%</b></span></td>
+<td class="drops"><span class="it fx">I02U<b>0.15%</b></span> <span class="it fx">I0R8<b>0.01%</b></span></td>
+</tr>    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <div class="eyebrow">Коротко</div>
+  <h2>Что из этого следует на практике</h2>
+  <div class="cards">
+    <div class="card"><div class="h">На рангах 4–5 всегда ставьте виш</div><div class="d">Без него шанс каждой строки делится на их количество. Виш не «повышает» шанс — он убирает штраф, который на вас и так висит.</div></div>
+    <div class="card"><div class="h">Сакрифайсы — только адресные</div><div class="d">+0.8 конкретному человеку против делёнки при варианте «всем». Потолок ×3 набирается тремя адресными жертвами.</div></div>
+    <div class="card"><div class="h">Жертвовать всей группой бессмысленно</div><div class="d">Если нежертвующих не осталось, бонус раздавать некому: множитель у всех остаётся ×1.0, а обычный лут потерян.</div></div>
+    <div class="card"><div class="h">Соло не наказывается</div><div class="d">Недобор до минимума группы конвертируется в бесплатные сакрифайсы: в одиночку на рейде ранга 4 это сразу ×2.6.</div></div>
+    <div class="card"><div class="h">Маунты не зависят почти ни от чего</div><div class="d">Особые строки идут мимо виша, сакрифайсов и лимита. На них влияет только дроп-рейт монстра и питомец — фармятся исключительно количеством убийств.</div></div>
+    <div class="card"><div class="h">Practice — это тренировка, не фарм</div><div class="d">Дроп-рейт −100 %: сундук не появится вообще. Hard, наоборот, даёт +50…75 % и стоит своих сложностей.</div></div>
+    <div class="card"><div class="h">Styrix и Kamael живут по своим правилам</div><div class="d">Общий сундук на всю группу, без вишей, сакрифайсов и бонуса питомца. Единственный рычаг — собрать побольше игроков сотого уровня.</div></div>
+    <div class="card"><div class="h">Собирайтесь у босса заранее</div><div class="d">В список лута попадают только те, кто был рядом или ударил. Прибежать к трупу — уже поздно.</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Для тех, кто полезет в код</div>
+  <h2>Где что лежит в war3map.j</h2>
+  <div class="prose stack">
+    <p>Имена в файле обфусцированы, номера строк — по исходному файлу на 48 672 строки.</p>
+  </div>
+  <div class="scroll"><table>
+    <thead><tr><th>Функция</th><th>Строка</th><th>Роль</th></tr></thead>
+    <tbody>
+      <tr><td><code>d5i</code></td><td class="num">29241</td><td>Срабатывает на смерть монстра. Разыгрывает дроп на землю и решает, звать ли сундучную ветку.</td></tr>
+      <tr><td><code>bDi</code></td><td class="num">28494</td><td>Создаёт сундук и обходит участников боя.</td></tr>
+      <tr><td><b><code>N2i</code></b></td><td class="num">28413</td><td><b>Главная функция расчёта шансов</b>: сакрифайсы, виши, питомцы, финальный бросок.</td></tr>
+      <tr><td><code>lcx</code></td><td class="num">6588</td><td>База всех монстров и дроп-таблиц — 99 записей одним куском.</td></tr>
+      <tr><td><code>lax</code> / <code>lEx</code></td><td class="num">6583</td><td>Регистрация монстра. <code>lEx</code> — версия для боссов, добавляет категорию и группу масштабирования.</td></tr>
+      <tr><td><code>lvx</code> / <code>lxx</code></td><td class="num">6583</td><td>Добавить обычную / особую строку дропа.</td></tr>
+      <tr><td><code>oko</code></td><td class="num">10042</td><td>Повесить модификатор дроп-рейта на монстра. Все вызовы этой функции — это и есть полный список источников дроп-рейта.</td></tr>
+      <tr><td><code>oSo</code></td><td class="num">10055</td><td>Масштабирование по размеру группы — здоровье и дроп.</td></tr>
+      <tr><td><code>oyo</code></td><td class="num">10068</td><td>Сложность: Normal / Hard / Practice.</td></tr>
+      <tr><td><code>o1o</code></td><td class="num">10080</td><td>Набор списка участников боя.</td></tr>
+      <tr><td><code>HYr</code> / <code>Hwr</code></td><td class="num">21576 / 21556</td><td>Босс-менеджер: создание и обработка покупок виша, сакрифайса, зелья и сложности.</td></tr>
+      <tr><td><code>iVo</code></td><td class="num">10252</td><td>Глобальные бонусы за количество игроков в лобби.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<footer>
+  Собрано статическим разбором <code>war3map.j</code> — 6.9 МБ обфусцированного JASS. Номера строк даны по исходному файлу. Названия боссов и предметов в самом скрипте почти не встречаются: они хранятся в редакторе объектов, поэтому имена восстановлены косвенно — по иконкам питомцев, рецептам крафта и трофеям, а идентификаторы предметов оставлены как есть.
+</footer>
+</div>
+
+</body>
+</html>
