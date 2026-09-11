@@ -7,6 +7,8 @@
 | [`index.html`](index.html) | Интерактивный калькулятор шанса дропа с боссов групп `gr`, `Gr`, `hr`, `Hr`, `jr`, `Jr` |
 | [`guide.html`](guide.html) | Как работает система дропа: формулы по шагам и полные таблицы по 42 боссам |
 
+Обе страницы двуязычные: переключатель **RU / EN** в правом верхнем углу. Выбор запоминается в браузере и переносится между страницами, язык можно задать и ссылкой — `?lang=en`. Если язык браузера не русский, страница сразу открывается по-английски. Русский текст лежит прямо в разметке, английский — словарём в том же файле, так что без JavaScript обе страницы читаются по-русски.
+
 ## Калькулятор
 
 Повторяет логику функции `N2i` из скрипта карты — те же множители, в том же порядке, с теми же обрезками:
@@ -34,3 +36,12 @@
 ```sh
 python -m http.server 8000
 ```
+
+## English
+
+Two static pages assembled from a static analysis of the TWRPG map script (`war3map.j`):
+
+- [`index.html`](index.html) — an interactive drop chance calculator for the bosses of groups `gr`, `Gr`, `hr`, `Hr`, `jr`, `Jr`
+- [`guide.html`](guide.html) — how the drop system works: step-by-step formulas and full tables for all 42 bosses
+
+Both are fully translated — use the **RU / EN** switch in the top right corner, or open a page with `?lang=en`. The map file itself is not part of the repository.

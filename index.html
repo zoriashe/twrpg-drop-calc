@@ -11,6 +11,22 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>html.lang-swap body{visibility:hidden}</style>
+<script>
+/* Язык выбирается до отрисовки: ?lang= → localStorage → язык браузера.
+   Русский лежит прямо в разметке, поэтому прячем страницу только на время подмены на английский. */
+(function(){
+  var L=["ru","en"], l=null;
+  try{
+    var q=new URLSearchParams(location.search).get("lang");
+    if(L.indexOf(q)>=0) l=q; else { var s=localStorage.getItem("twrpg.lang"); if(L.indexOf(s)>=0) l=s; }
+  }catch(e){}
+  if(!l) l=(navigator.language||"ru").toLowerCase().indexOf("ru")===0?"ru":"en";
+  var r=document.documentElement;
+  r.setAttribute("data-lang",l);
+  if(l!=="ru"){ r.className+=" lang-swap"; setTimeout(function(){ r.classList.remove("lang-swap"); },1500); }
+})();
+</script>
 <style>
 :root{
   --bg:#f7f5f9; --surface:#ffffff; --surface-2:#f1eef5; --ink:#191622; --ink-2:#4a4356;
@@ -151,38 +167,50 @@ footer code{font-size:.85em}
   color:var(--muted);border:1px solid var(--line-2);border-radius:999px;padding:.3em .85em;background:var(--surface)}
 .sitenav a[aria-current="page"]{color:var(--accent-ink);border-color:var(--accent);background:var(--accent-soft)}
 .sitenav a:hover{color:var(--ink)}
+.sitenav{flex-wrap:wrap}
+.langsw{margin-left:auto;display:flex;border:1px solid var(--line-2);border-radius:999px;overflow:hidden;background:var(--surface)}
+.langsw button{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.06em;
+  padding:.36em .72em;border:none;background:transparent;color:var(--muted);cursor:pointer}
+.langsw button+button{border-left:1px solid var(--line-2)}
+.langsw button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink)}
+.langsw button:hover{color:var(--ink)}
+.langsw button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 </style>
 </head>
 <body>
 <div class="wrap"><nav class="sitenav">
-  <a href="./" aria-current="page">Калькулятор</a>
-  <a href="./guide.html">Как считается дроп</a>
+  <a href="./" aria-current="page" data-i18n="nav.calc">Калькулятор</a>
+  <a href="./guide.html" data-i18n="nav.guide">Как считается дроп</a>
+  <div class="langsw" role="group" aria-label="Язык / Language">
+    <button type="button" data-lang-btn="ru" aria-pressed="true">RU</button>
+    <button type="button" data-lang-btn="en" aria-pressed="false">EN</button>
+  </div>
 </nav></div>
 
 
 <div class="wrap">
 <header class="top">
-  <div class="kicker">TWRPG · боссы групп gr · Gr · hr · Hr · jr · Jr</div>
-  <h1>Калькулятор дропа</h1>
-  <p class="lede">Считает итоговый шанс каждой строки лута ровно так, как это делает функция <code>N2i</code> в скрипте карты: размер группы, сложность, сакрифайсы, виш и иконка — в том же порядке и с теми же обрезками.</p>
+  <div data-i18n="hdr.kicker" class="kicker">TWRPG · боссы групп gr · Gr · hr · Hr · jr · Jr</div>
+  <h1 data-i18n="hdr.h1">Калькулятор дропа</h1>
+  <p data-i18n="hdr.lede" class="lede">Считает итоговый шанс каждой строки лута ровно так, как это делает функция <code>N2i</code> в скрипте карты: размер группы, сложность, сакрифайсы, виш и иконка — в том же порядке и с теми же обрезками.</p>
 </header>
 
 <div class="grid">
   <aside class="panel controls">
     <div class="fieldset">
-      <div class="legend">Босс</div>
+      <div data-i18n="leg.boss" class="legend">Босс</div>
       <select id="boss"></select>
       <div class="hint" id="bossHint"></div>
     </div>
 
     <div class="fieldset">
-      <div class="legend">Игроки</div>
+      <div data-i18n="leg.players" class="legend">Игроки</div>
       <label class="row"><span id="plLabel">В списке лута</span><input type="number" id="players" min="1" max="10" value="4"></label>
       <div class="hint" id="plHint"></div>
     </div>
 
     <div class="fieldset">
-      <div class="legend">Сложность</div>
+      <div data-i18n="leg.diff" class="legend">Сложность</div>
       <div class="seg" id="diff">
         <button data-v="normal" aria-pressed="true">Normal</button>
         <button data-v="hard" aria-pressed="false">Hard</button>
@@ -192,31 +220,31 @@ footer code{font-size:.85em}
     </div>
 
     <div class="fieldset">
-      <div class="legend">Виш</div>
+      <div data-i18n="leg.wish" class="legend">Виш</div>
       <select id="wish"></select>
       <div class="hint" id="wishHint"></div>
     </div>
 
     <div class="fieldset">
-      <div class="legend">Сакрифайсы</div>
-      <label class="row"><span>Жертвуют лично вам</span><input type="number" id="sacMe" min="0" max="9" value="0"></label>
-      <label class="row"><span>Жертвуют «всем»</span><input type="number" id="sacAll" min="0" max="9" value="0"></label>
-      <label class="row"><span>Жертвуют другому</span><input type="number" id="sacOther" min="0" max="9" value="0"></label>
-      <label class="check"><input type="checkbox" id="iSac"><span>Я сам жертвую — тогда обычные строки у меня не разыгрываются</span></label>
+      <div data-i18n="leg.sac" class="legend">Сакрифайсы</div>
+      <label class="row"><span data-i18n="sac.me">Жертвуют лично вам</span><input type="number" id="sacMe" min="0" max="9" value="0"></label>
+      <label class="row"><span data-i18n="sac.all">Жертвуют «всем»</span><input type="number" id="sacAll" min="0" max="9" value="0"></label>
+      <label class="row"><span data-i18n="sac.other">Жертвуют другому</span><input type="number" id="sacOther" min="0" max="9" value="0"></label>
+      <label class="check"><input type="checkbox" id="iSac"><span data-i18n="sac.self">Я сам жертвую — тогда обычные строки у меня не разыгрываются</span></label>
       <div class="err" id="sacErr" hidden></div>
       <div class="hint" id="sacHint"></div>
     </div>
 
     <div class="fieldset">
-      <div class="legend">Иконка (токен дропа)</div>
+      <div data-i18n="leg.token" class="legend">Иконка (токен дропа)</div>
       <select id="token">
-        <option value="">нет</option>
-        <option value="I0MD">Grandmaster Icon — редкость 4–6</option>
-        <option value="I02T">Legend Icon — редкость 4–7</option>
-        <option value="I03X">I03X — редкость 4–7 + Duke / Gaia / Arcane Construct</option>
-        <option value="I042">I042 — не работает в коде</option>
+        <option data-i18n="tok.none" value="">нет</option>
+        <option data-i18n="tok.I0MD" value="I0MD">Grandmaster Icon — редкость 4–6</option>
+        <option data-i18n="tok.I02T" value="I02T">Legend Icon — редкость 4–7</option>
+        <option data-i18n="tok.I03X" value="I03X">I03X — редкость 4–7 + Duke / Gaia / Arcane Construct</option>
+        <option data-i18n="tok.I042" value="I042">I042 — не работает в коде</option>
       </select>
-      <div class="hint">Даёт ×1.5 только экипировке (Weapon–Wing) и материалам грейда (Material) подходящей редкости. Монеты (Coin) и Vanity — иконки, токены, маунты — бонус не получают.</div>
+      <div data-i18n="tok.hint" class="hint">Даёт ×1.5 только экипировке (Weapon–Wing) и материалам грейда (Material) подходящей редкости. Монеты (Coin) и Vanity — иконки, токены, маунты — бонус не получают.</div>
     </div>
   </aside>
 
@@ -225,11 +253,11 @@ footer code{font-size:.85em}
     <div class="tiles" id="tiles"></div>
 
     <div>
-      <div class="sect-h"><h2>Строки лута</h2><span class="sub">клик по строке — посмотреть разбор расчёта</span></div>
+      <div class="sect-h"><h2 data-i18n="res.h2">Строки лута</h2><span data-i18n="res.sub" class="sub">клик по строке — посмотреть разбор расчёта</span></div>
       <div class="scroll"><table>
         <thead><tr>
-          <th>Предмет</th><th>Категория</th><th>Редкость</th>
-          <th class="r">База</th><th class="r">Итог</th><th class="r">Множитель</th><th class="r">Киллов до дропа</th>
+          <th data-i18n="th.item">Предмет</th><th data-i18n="th.cat">Категория</th><th data-i18n="th.rar">Редкость</th>
+          <th data-i18n="th.base" class="r">База</th><th data-i18n="th.final" class="r">Итог</th><th data-i18n="th.mult" class="r">Множитель</th><th data-i18n="th.kills" class="r">Киллов до дропа</th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table></div>
@@ -245,34 +273,309 @@ footer code{font-size:.85em}
 <script>
 const BOSSES=[{"id":"n02V","name":"Skeletal King","dp":3,"grp":"gr","lp":2,"wish":true,"hard":null,"prac":false,"g":{"min":2,"max":10,"step":5},"rows":[{"id":"ratc","nm":"Death Scythe","ch":1.25,"k":"n","rp":1,"ap":6},{"id":"rat6","nm":"Staff of Souls","ch":1.25,"k":"n","rp":1,"ap":6},{"id":"ward","nm":"Robe of the Reaper","ch":1.75,"k":"n","rp":2,"ap":6},{"id":"rat9","nm":"Bone Necklace","ch":1.75,"k":"n","rp":4,"ap":6},{"id":"nflg","nm":"Orb of Oblivion","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"gsou","nm":"Spirit of Abyss","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"I0EL","nm":"Skeleton Bone","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"I0NZ","nm":"Prius Gold Coin","ch":1.5,"k":"s","rp":8,"ap":6},{"id":"fgrg","nm":"Skeleton Token","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":7},{"id":"n02Y","name":"Shadow Dragon","dp":3,"grp":"gr","lp":2,"wish":true,"hard":null,"prac":false,"g":{"min":2,"max":10,"step":5},"rows":[{"id":"kymn","nm":"Levante, the Sword of Love and Hate","ch":1.0,"k":"n","rp":1,"ap":6},{"id":"bzbf","nm":"Draconic Skin Rusalka","ch":1.5,"k":"n","rp":2,"ap":6},{"id":"shwd","nm":"Nephthys, the Engraved Ring","ch":1.5,"k":"n","rp":4,"ap":6},{"id":"mcri","nm":"Essence of Darkness","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"I08N","nm":"Antimatter","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"I09N","nm":"Frozen Debris","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"I0NZ","nm":"Prius Gold Coin","ch":2.5,"k":"s","rp":8,"ap":6},{"id":"shar","nm":"Token of Darkness","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":6},{"id":"n030","name":"Ancient Ent","dp":3,"grp":"gr","lp":2,"wish":true,"hard":null,"prac":false,"g":{"min":2,"max":10,"step":5},"rows":[{"id":"pgin","nm":"Griseus, the Sword of Protection","ch":1.75,"k":"n","rp":1,"ap":6},{"id":"srtl","nm":"Ring of the Storm","ch":1.75,"k":"n","rp":4,"ap":6},{"id":"I0D2","nm":"Embrace of Nature","ch":1.25,"k":"n","rp":5,"ap":6},{"id":"ofir","nm":"Purified Water of Nature","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"shtm","nm":"Fragment of the Wind","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"I0NZ","nm":"Prius Gold Coin","ch":1.75,"k":"s","rp":8,"ap":6},{"id":"pres","nm":"Ent Token","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":5},{"id":"n033","name":"Zombie Lord","dp":3,"grp":"gr","lp":2,"wish":true,"hard":null,"prac":false,"g":{"min":2,"max":10,"step":5},"rows":[{"id":"belv","nm":"Parasitic Staff","ch":1.75,"k":"n","rp":1,"ap":6},{"id":"crys","nm":"Hood of the Fallen","ch":1.75,"k":"n","rp":3,"ap":6},{"id":"stel","nm":"Shroud of Perseverance","ch":1.25,"k":"n","rp":5,"ap":6},{"id":"I0AS","nm":"Proof of Purification","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"rde1","nm":"Heart of Fire","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"I08P","nm":"Dark Crystal","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"I0NZ","nm":"Prius Gold Coin","ch":1.75,"k":"s","rp":8,"ap":6},{"id":"pomn","nm":"Zombie Token","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":6},{"id":"n03S","name":"Bone Dragon","dp":3,"grp":"gr","lp":2,"wish":true,"hard":null,"prac":false,"g":{"min":2,"max":10,"step":5},"rows":[{"id":"sreg","nm":"Dragonic Orb","ch":1.75,"k":"n","rp":1,"ap":6},{"id":"pinv","nm":"Ancient Hourglass","ch":1.75,"k":"n","rp":4,"ap":6},{"id":"tret","nm":"Burning Bone Fragments","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"btst","nm":"Dragon's Eye","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"I0M7","nm":"Bone Dragon Icon","ch":0.25,"k":"n","rp":6,"sb":65,"ap":null},{"id":"I0NZ","nm":"Prius Gold Coin","ch":1.5,"k":"s","rp":8,"ap":6},{"id":"rre1","nm":"Bone Dragon Token","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":5},{"id":"o000","name":"Archangel","dp":3,"grp":"gr","lp":2,"wish":true,"hard":null,"prac":false,"g":{"min":2,"max":10,"step":5},"rows":[{"id":"I0EG","nm":"Guardian of the Skies","ch":1.25,"k":"n","rp":5,"ap":6},{"id":"I0E5","nm":"Steel of God","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"I0E7","nm":"God's Page","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"I0E6","nm":"Essence of Light","ch":2.5,"k":"n","rp":7,"ap":6},{"id":"I0NZ","nm":"Prius Gold Coin","ch":2.0,"k":"s","rp":8,"ap":6},{"id":"sneg","nm":"Archangel Token","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":4},{"id":"h01K","name":"Death Fiend","dp":4,"grp":"Gr","lp":2,"wish":true,"hard":50.0,"prac":true,"g":{"min":4,"max":10,"step":5},"rows":[{"id":"srbd","nm":"The Ender","ch":2.0,"k":"n","rp":1,"ap":7},{"id":"oslo","nm":"Armor of Grudge","ch":2.5,"k":"n","rp":2,"ap":7},{"id":"sprn","nm":"Eyes of the Watcher","ch":2.5,"k":"n","rp":3,"ap":7},{"id":"ledg","nm":"Ring of Destruction","ch":2.5,"k":"n","rp":4,"ap":7},{"id":"I0DG","nm":"Spearhead of Death","ch":3.0,"k":"n","rp":7,"ap":7},{"id":"kygh","nm":"Fragment of Chaos","ch":3.0,"k":"n","rp":7,"ap":7},{"id":"I0QH","nm":"Death Fiend Icon","ch":0.75,"k":"n","rp":6,"sb":65,"ap":null},{"id":"I0O0","nm":"Prius Platinum Coin","ch":0.8,"k":"s","rp":8,"ap":7},{"id":"infs","nm":"Fiend Token","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":7},{"id":"h04O","name":"Valtora","dp":4,"grp":"Gr","lp":2,"wish":true,"hard":50.0,"prac":true,"g":{"min":4,"max":10,"step":5},"rows":[{"id":"ocor","nm":"Shackles of Heaven","ch":2.5,"k":"n","rp":4,"ap":7},{"id":"I0IG","nm":"Aegis of Storm","ch":3.0,"k":"n","rp":7,"ap":7},{"id":"I0IH","nm":"Essence of Storm","ch":3.0,"k":"n","rp":7,"ap":7},{"id":"phea","nm":"Shining Fragment of Ruins","ch":2.0,"k":"n","rp":7,"ap":7},{"id":"I02E","nm":"Valtora Icon","ch":0.75,"k":"n","rp":6,"sb":65,"ap":null},{"id":"I0O0","nm":"Prius Platinum Coin","ch":0.8,"k":"s","rp":8,"ap":7},{"id":"I0P0","nm":"Lightning God Token","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":5},{"id":"h060","name":"Ifrit","dp":4,"grp":"Gr","lp":2,"wish":true,"hard":50.0,"prac":true,"g":{"min":4,"max":10,"step":5},"rows":[{"id":"I0JS","nm":"Heart of Volcano","ch":2.5,"k":"n","rp":4,"ap":7},{"id":"I0IE","nm":"Aegis of Flame","ch":3.0,"k":"n","rp":7,"ap":7},{"id":"I0IF","nm":"Essence of Flame","ch":3.0,"k":"n","rp":7,"ap":7},{"id":"phea","nm":"Shining Fragment of Ruins","ch":2.5,"k":"n","rp":7,"ap":7},{"id":"I02D","nm":"Ifrit Icon","ch":0.75,"k":"n","rp":6,"sb":65,"ap":null},{"id":"I0O0","nm":"Prius Platinum Coin","ch":0.9,"k":"s","rp":8,"ap":7},{"id":"I0P1","nm":"Flame God Token","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":5},{"id":"h06T","name":"Nereid","dp":4,"grp":"Gr","lp":2,"wish":true,"hard":75.0,"prac":true,"g":{"min":4,"max":10,"step":5},"rows":[{"id":"I0LX","nm":"Grail of Eternity","ch":2.5,"k":"n","rp":4,"ap":7},{"id":"I0II","nm":"Aegis of Sea","ch":3.0,"k":"n","rp":7,"ap":7},{"id":"I0IJ","nm":"Essence of Sea","ch":3.0,"k":"n","rp":7,"ap":7},{"id":"phea","nm":"Shining Fragment of Ruins","ch":3.0,"k":"n","rp":7,"ap":7},{"id":"I002","nm":"Nereid Icon","ch":0.75,"k":"n","rp":6,"sb":65,"ap":null},{"id":"I0O0","nm":"Prius Platinum Coin","ch":1.0,"k":"s","rp":8,"ap":7},{"id":"I0P2","nm":"Sea God Token","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":5},{"id":"h077","name":"Agareth","dp":4,"grp":"Gr","lp":2,"wish":true,"hard":75.0,"prac":true,"g":{"min":4,"max":10,"step":5},"rows":[{"id":"I0O3","nm":"Curse of Greed","ch":2.0,"k":"n","rp":5,"ap":7},{"id":"I0NV","nm":"Fragment of Soul","ch":2.5,"k":"n","rp":7,"ap":7},{"id":"I0NU","nm":"Fragment of Hell","ch":2.5,"k":"n","rp":7,"ap":7},{"id":"I0NW","nm":"Mark of Lord","ch":2.5,"k":"n","rp":7,"ap":7},{"id":"I02S","nm":"Agareth Icon","ch":0.75,"k":"n","rp":6,"sb":65,"ap":null},{"id":"I0O0","nm":"Prius Platinum Coin","ch":1.25,"k":"s","rp":8,"ap":7},{"id":"I0P3","nm":"Underlord Token","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":5},{"id":"h08K","name":"Duke","dp":5,"grp":"hr","lp":2,"wish":true,"hard":null,"prac":false,"g":{"min":5,"max":10,"step":5},"rows":[{"id":"I014","nm":"Crimson Rose","ch":1.2,"k":"n","rp":4,"ap":8},{"id":"I0R2","nm":"Blood Essence","ch":1.5,"k":"n","rp":7,"ap":8},{"id":"I0R4","nm":"Emblem of Sacrifice","ch":1.5,"k":"n","rp":7,"ap":8},{"id":"I0R3","nm":"Soul Blossom","ch":1.5,"k":"n","rp":7,"ap":8},{"id":"I0O2","nm":"Duke's Soulstone","ch":0.25,"k":"s","rp":8,"ap":8},{"id":"I0R6","nm":"Duke Token","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":4},{"id":"h09B","name":"Gaia","dp":5,"grp":"Hr","lp":2,"wish":true,"hard":null,"prac":false,"g":{"min":5,"max":10,"step":5},"rows":[{"id":"I01Z","nm":"Gown of Life","ch":0.9,"k":"n","rp":2,"ap":8},{"id":"I05Q","nm":"Essence of Earth","ch":1.2,"k":"n","rp":7,"ap":8},{"id":"I09R","nm":"Aegis of Earth","ch":1.2,"k":"n","rp":7,"ap":8},{"id":"I05P","nm":"Twisted Fragment of Ruins","ch":1.2,"k":"n","rp":7,"ap":8},{"id":"I0LY","nm":"Gaia's Soulstone","ch":0.2,"k":"s","rp":8,"ap":8},{"id":"I0R7","nm":"Gaia Token","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":4},{"id":"h09V","name":"Arcane Construct","dp":5,"grp":"jr","lp":2,"wish":true,"hard":null,"prac":false,"g":{"min":4,"max":6,"step":7.5},"rows":[{"id":"I095","nm":"Mask of Truth","ch":0.6,"k":"n","rp":3,"ap":8},{"id":"I0LP","nm":"Arcane Core","ch":0.8,"k":"n","rp":7,"ap":8},{"id":"I0O1","nm":"Ancient Tome","ch":0.8,"k":"n","rp":7,"ap":8},{"id":"I02W","nm":"Construct's Soulstone","ch":0.15,"k":"s","rp":8,"ap":8},{"id":"I0GH","nm":"Construct Token","ch":0.005,"k":"s","rp":6,"sb":64,"ap":null}],"mP":3},{"id":"h0A1","name":"Harvester","dp":5,"grp":"Jr","lp":3,"wish":false,"hard":null,"prac":false,"g":{"min":6,"max":10,"step":20},"rows":[{"id":"rlif","nm":"Grim Scythe","ch":0.4,"k":"n","rp":1,"ap":8},{"id":"I02V","nm":"Sinister Skull","ch":0.6,"k":"n","rp":7,"ap":8},{"id":"I05K","nm":"Lantern of Souls","ch":0.6,"k":"n","rp":7,"ap":8},{"id":"I05H","nm":"Spirit of Damnation","ch":0.6,"k":"n","rp":7,"ap":8},{"id":"I0M0","nm":"Harvester's Soulstone","ch":0.15,"k":"s","rp":8,"ap":8},{"id":"I0QE","nm":"Harvester's Token","ch":0.01,"k":"s","rp":6,"sb":64,"ap":null}],"mP":4},{"id":"h0AB","name":"Kamael","dp":5,"grp":"Jr","lp":3,"wish":false,"hard":null,"prac":false,"g":{"min":6,"max":10,"step":20},"rows":[{"id":"I023","nm":"Sunstone","ch":0.4,"k":"n","rp":4,"ap":8},{"id":"I02N","nm":"Holy Thread","ch":0.6,"k":"n","rp":7,"ap":8},{"id":"I02O","nm":"Divine Lotus","ch":0.6,"k":"n","rp":7,"ap":8},{"id":"I02P","nm":"Dew of Paradise","ch":0.6,"k":"n","rp":7,"ap":8},{"id":"I02U","nm":"Kamael's Soulstone","ch":0.15,"k":"s","rp":8,"ap":8},{"id":"I0R8","nm":"Lightbringer's Token","ch":0.01,"k":"s","rp":6,"sb":64,"ap":null}],"mP":4}];
 </script>
-<footer>
+<footer data-i18n="footer">
   Данные и формулы извлечены из <code>war3map.j</code>. Расчёт повторяет функцию <code>N2i</code> (war3map.j:28413): дроп-рейт монстра из <code>oSo</code> / <code>oyo</code>, множитель сакрифайсов, штраф за отсутствие виша, бонус иконки. Названия предметов взяты из выгрузки объектов карты (<code>72f-G4ndi.txt</code>) и совпадают с внутриигровыми; идентификатор показан под названием. Редкость берётся из скрипта — именно её проверяет код при расчёте бонуса иконки, и у нескольких материалов она отличается от цвета, которым предмет подсвечен в игре. Категории взяты из таблицы <code>Y[]</code> (<code>war3map.j:2301</code>) и показаны так же, как в тултипе внутри игры: Weapon · Armor · Headwear · Accessory · Wing — экипировка, Material — материалы грейда, Coin — монеты и соулстоуны, Vanity — иконки и токены (вторая часть через · — подтип из <code>xv[]</code>), Misc — прочее.
 </footer>
 </div>
 
 <script>
+/* ---------- английский перевод статической разметки ---------- */
+/* Русский лежит в самой разметке; здесь только английские замены по ключу data-i18n. */
+const EN = {
+ "nav.calc": "Calculator",
+ "nav.guide": "How drop works",
+ "meta.title": "TWRPG drop calculator",
+ "meta.desc": "Drop chance calculator for TWRPG bosses: sacrifices, wish, icon, party size and difficulty.",
+ "hdr.kicker": "TWRPG · bosses of groups gr · Gr · hr · Hr · jr · Jr",
+ "hdr.h1": "Drop calculator",
+ "hdr.lede": "Computes the final chance of every loot row exactly the way the <code>N2i</code> function does it in the map script: party size, difficulty, sacrifices, wish and icon — in the same order and with the same clamps.",
+ "leg.boss": "Boss",
+ "leg.players": "Players",
+ "leg.diff": "Difficulty",
+ "leg.wish": "Wish",
+ "leg.sac": "Sacrifices",
+ "leg.token": "Icon (drop token)",
+ "sac.me": "Sacrificing to you",
+ "sac.all": "Sacrificing to “everyone”",
+ "sac.other": "Sacrificing to someone else",
+ "sac.self": "I am sacrificing myself — then no normal rows are rolled for me",
+ "tok.none": "none",
+ "tok.I0MD": "Grandmaster Icon — rarity 4–6",
+ "tok.I02T": "Legend Icon — rarity 4–7",
+ "tok.I03X": "I03X — rarity 4–7 + Duke / Gaia / Arcane Construct",
+ "tok.I042": "I042 — does nothing in the code",
+ "tok.hint": "Gives ×1.5 only to equipment (Weapon–Wing) and grade materials (Material) of a matching rarity. Coins and Vanity — icons, tokens, mounts — get no bonus.",
+ "res.h2": "Loot rows",
+ "res.sub": "click a row to see the breakdown",
+ "th.item": "Item",
+ "th.cat": "Category",
+ "th.rar": "Rarity",
+ "th.base": "Base",
+ "th.final": "Final",
+ "th.mult": "Multiplier",
+ "th.kills": "Kills per drop",
+ "footer": "Data and formulas were extracted from <code>war3map.j</code>. The calculation reproduces the <code>N2i</code> function (war3map.j:28413): monster drop rate from <code>oSo</code> / <code>oyo</code>, the sacrifice multiplier, the no-wish penalty and the icon bonus. Item names come from the map object dump (<code>72f-G4ndi.txt</code>) and match the in-game ones; the id is shown under the name. Rarity is taken from the script — that is the value the code checks when computing the icon bonus, and for several materials it differs from the colour the item is highlighted with in game. Categories come from the <code>Y[]</code> table (<code>war3map.j:2301</code>) and are shown the same way as in the in-game tooltip: Weapon · Armor · Headwear · Accessory · Wing — equipment, Material — grade materials, Coin — coins and soulstones, Vanity — icons and tokens (the part after · is the subtype from <code>xv[]</code>), Misc — everything else."
+};
+
+/* ---------- строки, которые собирает скрипт ---------- */
+/* {…} — подстановка. Порядок ключей одинаковый в обоих языках. */
+const TXT = {
+ru: {
+ "grp.players": "игроков",
+ "pl.jr": "Игроков 100 lvl в игре",
+ "pl.list": "В списке лута",
+ "pl.hint.jr": "Эта группа считает всех игроков сотого уровня в лобби, а не только тех, кто в бою. Порог — {min}.",
+ "pl.hint.def": "Бонус начинается с {min} игроков и упирается в {max}. Шаг {step} % за игрока.",
+ "boss.hint": "Ранг {dp} · группа {grp} · {chest} · обычных строк {rows}",
+ "chest.shared": "общий сундук на всю группу",
+ "chest.personal": "личный сундук у каждого",
+ "diff.hint": "Hard: +{hard} % к дропу и +характеристики босса. Practice: дроп −100 %.",
+ "diff.none": "У этого босса нет выбора сложности.",
+ "wish.none": "не загадан",
+ "wish.hint.off": "Этот босс не даёт вишить: расчёт идёт один раз на всю группу.",
+ "wish.hint.hi": "Виш убирает деление на количество строк. Остальные обычные строки при этом не разыгрываются.",
+ "wish.hint.lo": "Виш даёт ×2.5 загаданному предмету. Остальные обычные строки не разыгрываются.",
+ "sac.hint": "Не жертвуют: {n} из {N}. Компенсация за неполную группу: {comp}.",
+ "sac.comp": "+{n} виртуальных жертв «всем»",
+ "sac.comp.none": "нет",
+ "sac.off": "Сакрифайсы есть только у боссов рангов 4 и 5 с вишами.",
+ "sac.err": "Жертвующих больше, чем игроков в списке — уменьшите числа.",
+ "bn.prac": "<b>Practice.</b> Дроп-рейт −100 %: сундук не появится вообще, лут равен нулю при любых остальных настройках.",
+ "bn.shared": "<b>Общий сундук.</b> У этого босса лут считается один раз на всю группу, поэтому виши, сакрифайсы и иконка не работают вовсе — остаётся только дроп-рейт монстра. Забирает вещь тот, кто первым её взял.",
+ "bn.isac": "<b>Вы жертвуете.</b> Все обычные строки у вас выключены — останутся только особые. Ваш собственный множитель не считается.",
+ "bn.i042": "<b>Иконка I042 не работает.</b> В описании предмета бонус заявлен, но в коде расчёта проверяются только I0MD, I02T и I03X.",
+ "bn.nowish": "<b>Виш не загадан.</b> Каждая обычная строка режется в {k} раз — делится на {rows} строк и умножается на 1.15.",
+ "bn.few": "<b>Игроков меньше {min}.</b> Бонус за размер группы не начисляется совсем{sac}.",
+ "bn.few.sac": ", зато недобор компенсируется сакрифайсами",
+ "tile.dr": "Дроп-рейт монстра",
+ "tile.dr.none": "нет бонусов",
+ "tile.sac": "Сакрифайсы",
+ "tile.sac.cap": "потолок ×3.0",
+ "tile.sac.upto": "до ×3.0",
+ "tile.sac.off": "нет у этого босса",
+ "tile.pen": "Штраф без виша",
+ "tile.pen.on": "1.15 ÷ {rows} строк",
+ "tile.pen.wish": "снят вишем",
+ "tile.pen.off": "не применяется",
+ "tile.exp": "Вещей за килл",
+ "tile.exp.sub": "математическое ожидание",
+ "tile.any": "Хоть что-то за килл",
+ "tile.any.sub": "1 килл из {n}",
+ "pill.special": "особая",
+ "pill.wish": "виш",
+ "br.title": "Разбор — {name}",
+ "br.title.empty": "Разбор расчёта",
+ "br.cat.unknown": "категория неизвестна",
+ "br.rar.unknown": "редкость неизвестна",
+ "br.kind.special": "особая строка",
+ "br.kind.normal": "обычная строка",
+ "st.base": "<b>Базовый шанс строки</b> — как он записан в таблице монстра",
+ "st.blocked": "<b>Строка не разыгрывается</b> — {why}",
+ "why.isac": "вы жертвуете — обычные строки не разыгрываются",
+ "why.wish": "виш загадан на другой предмет",
+ "st.dr": "<b>Дроп-рейт монстра.</b> {N} игрок(ов){size}{hard}{prac}. Множители перемножаются: {expr}",
+ "st.dr.size": " — это {k} × {step} %",
+ "st.dr.below": " — меньше порога {min}, бонуса нет",
+ "st.dr.hard": "; Hard +{hard} %",
+ "st.dr.prac": "; Practice −100 %",
+ "st.dr.none": "бонусов нет, ×1",
+ "st.sac": "<b>Множитель сакрифайсов.</b> {parts}{capped}",
+ "st.sac.me": "{n} лично вам → +{v}",
+ "st.sac.all": "{n} «всем»{grp} → +{v} на {k} нежертвующих",
+ "st.sac.all.grp": " (в т.ч. {n} за недобор группы)",
+ "st.sac.none": "никто не жертвует",
+ "st.sac.capped": ". Итог обрезан потолком ×3.0",
+ "st.pen": "<b>Штраф за отсутствие виша.</b> Шанс делится на {rows} обычных строк и умножается на 1.15",
+ "st.wish.hit": "<b>Виш загадан на этот предмет</b> — деления нет, идёт полный базовый шанс",
+ "st.wish.25": "<b>Виш на боссе ранга 3</b> — загаданный предмет получает ×2.5",
+ "st.special": "<b>Особая строка</b> — виши и сакрифайсы её не касаются, лимит на неё не действует",
+ "st.icon.on": "<b>Иконка {tok}.</b> Категория {cat} и редкость {rar} подходят",
+ "st.icon.off": "<b>Иконка {tok} не действует</b> — {why}",
+ "icon.why.shared": "на общем сундуке бонус не считается",
+ "icon.why.i042": "этот токен не проверяется в коде",
+ "icon.why.cat": "не та категория или редкость предмета",
+ "st.final": "<b>Итог.</b> Игра бросает число 0–100 и сравнивает с этим значением{over}",
+ "st.final.over": " (больше 100 — выпадает всегда)",
+ "st.kills": "<b>В среднем киллов до дропа</b> — 100 ÷ итоговый шанс",
+ "val.same": "без изменений",
+ "rar.unknown": "—"
+},
+en: {
+ "grp.players": "players",
+ "pl.jr": "Level 100 players in game",
+ "pl.list": "On the loot list",
+ "pl.hint.jr": "This group counts every level 100 player in the lobby, not just the ones in the fight. The threshold is {min}.",
+ "pl.hint.def": "The bonus starts at {min} players and caps at {max}. {step} % per player.",
+ "boss.hint": "Rank {dp} · group {grp} · {chest} · {rows} normal rows",
+ "chest.shared": "one shared chest for the party",
+ "chest.personal": "a personal chest for everyone",
+ "diff.hint": "Hard: +{hard} % drop and higher boss stats. Practice: drop −100 %.",
+ "diff.none": "This boss has no difficulty choice.",
+ "wish.none": "not set",
+ "wish.hint.off": "This boss cannot be wished on: the roll happens once for the whole party.",
+ "wish.hint.hi": "A wish removes the division by row count. The other normal rows are not rolled.",
+ "wish.hint.lo": "A wish gives ×2.5 to the wished item. The other normal rows are not rolled.",
+ "sac.hint": "Not sacrificing: {n} of {N}. Compensation for an incomplete party: {comp}.",
+ "sac.comp": "+{n} virtual “to everyone” sacrifices",
+ "sac.comp.none": "none",
+ "sac.off": "Sacrifices exist only on rank 4 and 5 bosses that allow wishes.",
+ "sac.err": "More sacrificers than players on the list — lower the numbers.",
+ "bn.prac": "<b>Practice.</b> Drop rate −100 %: no chest appears at all, the loot is zero whatever else you set.",
+ "bn.shared": "<b>Shared chest.</b> On this boss the loot is rolled once for the whole party, so wishes, sacrifices and the icon do nothing at all — only the monster drop rate is left. The item goes to whoever takes it first.",
+ "bn.isac": "<b>You are sacrificing.</b> All of your normal rows are switched off — only special ones remain. Your own multiplier is not computed.",
+ "bn.i042": "<b>The I042 icon does nothing.</b> Its description promises the bonus, but the calculation code only checks I0MD, I02T and I03X.",
+ "bn.nowish": "<b>No wish set.</b> Every normal row is cut {k}× — divided by {rows} rows and multiplied by 1.15.",
+ "bn.few": "<b>Fewer than {min} players.</b> The party size bonus is not granted at all{sac}.",
+ "bn.few.sac": ", but the shortfall is compensated by sacrifices",
+ "tile.dr": "Monster drop rate",
+ "tile.dr.none": "no bonuses",
+ "tile.sac": "Sacrifices",
+ "tile.sac.cap": "ceiling ×3.0",
+ "tile.sac.upto": "up to ×3.0",
+ "tile.sac.off": "none on this boss",
+ "tile.pen": "No-wish penalty",
+ "tile.pen.on": "1.15 ÷ {rows} rows",
+ "tile.pen.wish": "lifted by the wish",
+ "tile.pen.off": "not applied",
+ "tile.exp": "Items per kill",
+ "tile.exp.sub": "expected value",
+ "tile.any": "Anything per kill",
+ "tile.any.sub": "1 kill in {n}",
+ "pill.special": "special",
+ "pill.wish": "wish",
+ "br.title": "Breakdown — {name}",
+ "br.title.empty": "Calculation breakdown",
+ "br.cat.unknown": "category unknown",
+ "br.rar.unknown": "rarity unknown",
+ "br.kind.special": "special row",
+ "br.kind.normal": "normal row",
+ "st.base": "<b>Base chance of the row</b> — as written in the monster table",
+ "st.blocked": "<b>The row is not rolled</b> — {why}",
+ "why.isac": "you are sacrificing — normal rows are not rolled",
+ "why.wish": "the wish is set on a different item",
+ "st.dr": "<b>Monster drop rate.</b> {N} player(s){size}{hard}{prac}. The multipliers multiply: {expr}",
+ "st.dr.size": " — that is {k} × {step} %",
+ "st.dr.below": " — below the threshold of {min}, no bonus",
+ "st.dr.hard": "; Hard +{hard} %",
+ "st.dr.prac": "; Practice −100 %",
+ "st.dr.none": "no bonuses, ×1",
+ "st.sac": "<b>Sacrifice multiplier.</b> {parts}{capped}",
+ "st.sac.me": "{n} to you personally → +{v}",
+ "st.sac.all": "{n} to “everyone”{grp} → +{v} across {k} non-sacrificers",
+ "st.sac.all.grp": " (incl. {n} for the incomplete party)",
+ "st.sac.none": "nobody is sacrificing",
+ "st.sac.capped": ". Clamped by the ×3.0 ceiling",
+ "st.pen": "<b>Penalty for having no wish.</b> The chance is divided by {rows} normal rows and multiplied by 1.15",
+ "st.wish.hit": "<b>The wish is set on this item</b> — no division, it runs at the full base chance",
+ "st.wish.25": "<b>Wish on a rank 3 boss</b> — the wished item gets ×2.5",
+ "st.special": "<b>Special row</b> — wishes and sacrifices do not touch it, and the cap does not apply",
+ "st.icon.on": "<b>Icon {tok}.</b> Category {cat} and rarity {rar} match",
+ "st.icon.off": "<b>Icon {tok} does nothing</b> — {why}",
+ "icon.why.shared": "the bonus is not computed for a shared chest",
+ "icon.why.i042": "this token is not checked in the code",
+ "icon.why.cat": "wrong item category or rarity",
+ "st.final": "<b>Final.</b> The game rolls a number from 0 to 100 and compares it with this value{over}",
+ "st.final.over": " (above 100 — always drops)",
+ "st.kills": "<b>Average kills per drop</b> — 100 ÷ final chance",
+ "val.same": "unchanged",
+ "rar.unknown": "—"
+}
+};
+
+/* ---------- переключение языка ---------- */
+const I18N = (function(){
+  const LANGS = ['ru','en'], KEY = 'twrpg.lang';
+  const root = document.documentElement;
+  const snap = new Map();                       // исходный русский HTML каждого элемента
+  const RU_META = { title: document.title, desc: document.querySelector('meta[name="description"]').content };
+  let lang = LANGS.includes(root.getAttribute('data-lang')) ? root.getAttribute('data-lang') : 'ru';
+  const subs = [];
+
+  function meta(sel, value){ const m = document.querySelector(sel); if (m) m.setAttribute('content', value); }
+
+  function apply(){
+    root.setAttribute('lang', lang);
+    root.setAttribute('data-lang', lang);
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const k = el.getAttribute('data-i18n');
+      if (!snap.has(el)) snap.set(el, el.innerHTML);
+      const v = lang === 'ru' ? snap.get(el) : EN[k];
+      if (v != null && el.innerHTML !== v) el.innerHTML = v;
+    });
+    document.title = lang === 'ru' ? RU_META.title : EN['meta.title'];
+    const desc = lang === 'ru' ? RU_META.desc : EN['meta.desc'];
+    meta('meta[name="description"]', desc);
+    meta('meta[property="og:title"]', document.title);
+    meta('meta[property="og:description"]', desc);
+    document.querySelectorAll('[data-lang-btn]').forEach(b=>{
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-lang-btn') === lang));
+    });
+    // если язык пришёл ссылкой — сохраняем его в ссылках на соседнюю страницу
+    const u = new URL(location.href);
+    if (u.searchParams.has('lang')){
+      u.searchParams.set('lang', lang);
+      history.replaceState(null, '', u);
+      document.querySelectorAll('.sitenav a[href]').forEach(a=>{
+        a.setAttribute('href', a.getAttribute('href').split('?')[0] + '?lang=' + lang);
+      });
+    }
+    root.classList.remove('lang-swap');
+    subs.forEach(f=>f(lang));
+  }
+
+  function set(l){
+    if (!LANGS.includes(l) || l === lang) return;
+    lang = l;
+    try { localStorage.setItem(KEY, l); } catch(e){}
+    apply();
+  }
+
+  document.querySelectorAll('[data-lang-btn]').forEach(b=>{
+    b.addEventListener('click', ()=>set(b.getAttribute('data-lang-btn')));
+  });
+  try { localStorage.setItem(KEY, lang); } catch(e){}
+
+  return { get lang(){ return lang; }, set, apply, on(fn){ subs.push(fn); } };
+})();
+
+const t = (k, v) => {
+  const s = (TXT[I18N.lang] || TXT.ru)[k];
+  if (s == null) return k;
+  return v ? s.replace(/\{(\w+)\}/g, (_, n) => v[n] != null ? v[n] : '') : s;
+};
+const nfmt = n => n.toLocaleString(I18N.lang === 'ru' ? 'ru' : 'en-US');
+
 const $ = s => document.querySelector(s);
 const clamp = (v,a,b) => Math.min(Math.max(v,a),b);
 const SLOT = {1:'Weapon',2:'Armor',3:'Headwear',4:'Accessory',5:'Wing',6:'Vanity',7:'Material',8:'Coin',10:'Misc'};
 const SUB  = {1:'Shared',2:'Melee',3:'Staff',4:'Bow',5:'Gun',6:'Bag',61:'Costume',62:'Aura',63:'Wing',64:'Token',65:'Icon',66:'Deco Icon',67:'Mount',68:'Misc'};
 const cat  = r => SLOT[r.rp] ? SLOT[r.rp] + (SUB[r.sb] ? ' · ' + SUB[r.sb] : '') : '';
 const RAR  = {4:'Deltirama',5:'Neptinos',6:'Gnosis',7:'Alteia',8:'Arcana'};
-const GRPNAME = {gr:'gr · 2–10 игроков',Gr:'Gr · 4–10 игроков',hr:'hr · 5–10 игроков',Hr:'Hr · 5–10 игроков',jr:'jr · 4–6 игроков',Jr:'Jr · 6–10 игроков'};
+const GRANGE = {gr:'2–10',Gr:'4–10',hr:'5–10',Hr:'5–10',jr:'4–6',Jr:'6–10'};
 
-const S = { boss:0, players:4, diff:'normal', wish:'', sacMe:0, sacAll:0, sacOther:0, iSac:false, token:'', target:null };
+const S = { boss:0, bossId:'h01K', players:4, diff:'normal', wish:'', sacMe:0, sacAll:0, sacOther:0, iSac:false, token:'', target:null };
 
 /* ---------- построение селектора боссов ---------- */
-(function(){
-  const sel = $('#boss'); let cur = null, og = null;
+function buildBosses(){
+  const sel = $('#boss');
+  let cur = null, og = null;
+  sel.innerHTML = '';
   BOSSES.forEach((b,i)=>{
-    if (b.grp !== cur){ cur = b.grp; og = document.createElement('optgroup'); og.label = GRPNAME[b.grp]; sel.appendChild(og); }
+    if (b.grp !== cur){
+      cur = b.grp;
+      og = document.createElement('optgroup');
+      og.label = `${b.grp} · ${GRANGE[b.grp]} ${t('grp.players')}`;
+      sel.appendChild(og);
+    }
     const o = document.createElement('option');
     o.value = i; o.textContent = (b.name && b.name !== '—') ? `${b.name} (${b.id})` : b.id;
     og.appendChild(o);
   });
-  sel.value = BOSSES.findIndex(b => b.id === 'h01K');
+  const i = BOSSES.findIndex(b => b.id === S.bossId);
+  sel.value = i >= 0 ? i : 0;
   S.boss = +sel.value;
-})();
+}
+buildBosses();
 
 /* ---------- расчёт: точная копия логики N2i ---------- */
 function calc(){
@@ -312,7 +615,7 @@ function calc(){
     let c = r.ch, steps = [];
     if (!eligible){
       return {...r, special, final:0, mult:0, petOK, blocked:true,
-              why: iSac ? 'вы жертвуете — обычные строки не разыгрываются' : 'виш загадан на другой предмет'};
+              why: iSac ? t('why.isac') : t('why.wish')};
     }
     c *= (1 + dr);
     if (b.dp === 4 || b.dp === 5){
@@ -346,21 +649,22 @@ function render(){
   const R = calc(), b = R.b;
 
   // доступность контролов
-  $('#plLabel').textContent = (b.grp === 'Jr') ? 'Игроков 100 lvl в игре' : 'В списке лута';
+  $('#plLabel').textContent = (b.grp === 'Jr') ? t('pl.jr') : t('pl.list');
   $('#plHint').textContent = (b.grp === 'Jr')
-    ? `Эта группа считает всех игроков сотого уровня в лобби, а не только тех, кто в бою. Порог — ${b.g.min}.`
-    : `Бонус начинается с ${b.g.min} игроков и упирается в ${b.g.max}. Шаг ${b.g.step} % за игрока.`;
-  $('#bossHint').textContent = `Ранг ${b.dp} · группа ${b.grp} · ${b.lp===3?'общий сундук на всю группу':'личный сундук у каждого'} · обычных строк ${b.mP}`;
+    ? t('pl.hint.jr', {min: b.g.min})
+    : t('pl.hint.def', {min: b.g.min, max: b.g.max, step: b.g.step});
+  $('#bossHint').textContent = t('boss.hint', {
+    dp: b.dp, grp: b.grp, rows: b.mP,
+    chest: b.lp === 3 ? t('chest.shared') : t('chest.personal')
+  });
 
   const dHard = $('#diff').querySelector('[data-v="hard"]'), dPrac = $('#diff').querySelector('[data-v="prac"]');
   dHard.disabled = !b.hard; dPrac.disabled = !b.prac;
-  $('#diffHint').textContent = b.hard
-    ? `Hard: +${b.hard} % к дропу и +характеристики босса. Practice: дроп −100 %.`
-    : 'У этого босса нет выбора сложности.';
+  $('#diffHint').textContent = b.hard ? t('diff.hint', {hard: b.hard}) : t('diff.none');
 
   // виш
   const wsel = $('#wish'), keep = S.wish;
-  wsel.innerHTML = '<option value="">не загадан</option>';
+  wsel.innerHTML = `<option value="">${t('wish.none')}</option>`;
   b.rows.filter(r=>r.k==='n').forEach(r=>{
     const o = document.createElement('option'); o.value = r.id;
     o.textContent = `${r.nm || r.id} — ${pct(r.ch)} % · ${cat(r)||'?'}`;
@@ -368,40 +672,38 @@ function render(){
   });
   wsel.value = b.rows.some(r=>r.id===keep && r.k==='n') ? keep : (S.wish='', '');
   wsel.disabled = !b.wish;
-  $('#wishHint').textContent = !b.wish
-    ? 'Этот босс не даёт вишить: расчёт идёт один раз на всю группу.'
-    : (b.dp>=4 ? 'Виш убирает деление на количество строк. Остальные обычные строки при этом не разыгрываются.'
-               : 'Виш даёт ×2.5 загаданному предмету. Остальные обычные строки не разыгрываются.');
+  $('#wishHint').textContent = !b.wish ? t('wish.hint.off') : (b.dp>=4 ? t('wish.hint.hi') : t('wish.hint.lo'));
 
   const sacOn = R.raid;
   ['#sacMe','#sacAll','#sacOther'].forEach(s=>{ $(s).disabled = !sacOn || S.iSac; });
   $('#iSac').disabled = !sacOn;
   $('#token').disabled = R.globalChest;
   $('#sacHint').textContent = sacOn
-    ? `Не жертвуют: ${R.iSac ? '—' : R.bni} из ${R.N}. Компенсация за неполную группу: ${R.baiGroup>0 ? '+'+R.baiGroup+' виртуальных жертв «всем»' : 'нет'}.`
-    : 'Сакрифайсы есть только у боссов рангов 4 и 5 с вишами.';
+    ? t('sac.hint', {n: R.iSac ? '—' : R.bni, N: R.N,
+        comp: R.baiGroup > 0 ? t('sac.comp', {n: R.baiGroup}) : t('sac.comp.none')})
+    : t('sac.off');
   const over = S.sacMe + S.sacAll + S.sacOther > R.N - (S.iSac ? 0 : 1);
   $('#sacErr').hidden = !over || !sacOn;
-  $('#sacErr').textContent = 'Жертвующих больше, чем игроков в списке — уменьшите числа.';
+  $('#sacErr').textContent = t('sac.err');
 
   // баннеры
   const bn = [];
-  if (S.diff === 'prac' && b.prac) bn.push(['warn','<b>Practice.</b> Дроп-рейт −100 %: сундук не появится вообще, лут равен нулю при любых остальных настройках.']);
-  if (R.globalChest) bn.push(['info','<b>Общий сундук.</b> У этого босса лут считается один раз на всю группу, поэтому виши, сакрифайсы и иконка не работают вовсе — остаётся только дроп-рейт монстра. Забирает вещь тот, кто первым её взял.']);
-  if (R.iSac) bn.push(['warn','<b>Вы жертвуете.</b> Все обычные строки у вас выключены — останутся только особые. Ваш собственный множитель не считается.']);
-  if (S.token === 'I042') bn.push(['warn','<b>Иконка I042 не работает.</b> В описании предмета бонус заявлен, но в коде расчёта проверяются только I0MD, I02T и I03X.']);
-  if (R.raid && !R.wish && !R.iSac) bn.push(['info',`<b>Виш не загадан.</b> Каждая обычная строка режется в ${pct(1/R.pen)} раз — делится на ${b.mP} строк и умножается на 1.15.`]);
-  if (R.N < b.g.min) bn.push(['info',`<b>Игроков меньше ${b.g.min}.</b> Бонус за размер группы не начисляется совсем${R.raid?', зато недобор компенсируется сакрифайсами':''}.`]);
+  if (S.diff === 'prac' && b.prac) bn.push(['warn', t('bn.prac')]);
+  if (R.globalChest) bn.push(['info', t('bn.shared')]);
+  if (R.iSac) bn.push(['warn', t('bn.isac')]);
+  if (S.token === 'I042') bn.push(['warn', t('bn.i042')]);
+  if (R.raid && !R.wish && !R.iSac) bn.push(['info', t('bn.nowish', {k: pct(1/R.pen), rows: b.mP})]);
+  if (R.N < b.g.min) bn.push(['info', t('bn.few', {min: b.g.min, sac: R.raid ? t('bn.few.sac') : ''})]);
   $('#banners').innerHTML = bn.map(([c,h])=>`<div class="banner ${c}" style="margin-bottom:12px">${h}</div>`).join('');
 
   // плитки
-  const t = [];
-  t.push(tile('Дроп-рейт монстра', (R.dr>=0?'+':'') + (R.dr*100).toFixed(1) + ' %', R.mods.length ? R.mods.map(m=>(m>0?'+':'')+m+' %').join(' × ') : 'нет бонусов', R.dr<0?'bad':(R.dr>0?'hot':'off')));
-  t.push(tile('Сакрифайсы', '×' + R.n6.toFixed(2), R.raid ? (R.n6>=3?'потолок ×3.0':'до ×3.0') : 'нет у этого босса', R.raid && R.n6>1 ? 'hot':'off'));
-  t.push(tile('Штраф без виша', R.penalty ? '×' + R.pen.toFixed(3) : '—', R.penalty ? `1.15 ÷ ${b.mP} строк` : (R.wish?'снят вишем':'не применяется'), R.penalty?'bad':'off'));
-  t.push(tile('Вещей за килл', R.expected.toFixed(3), 'математическое ожидание', R.expected>0?'':'off'));
-  t.push(tile('Хоть что-то за килл', (R.anyItem*100).toFixed(2) + ' %', R.anyItem>0 ? '1 килл из ' + Math.max(1,Math.round(1/R.anyItem)) : '—', R.anyItem>0?'':'off'));
-  $('#tiles').innerHTML = t.join('');
+  const tl = [];
+  tl.push(tile(t('tile.dr'), (R.dr>=0?'+':'') + (R.dr*100).toFixed(1) + ' %', R.mods.length ? R.mods.map(m=>(m>0?'+':'')+m+' %').join(' × ') : t('tile.dr.none'), R.dr<0?'bad':(R.dr>0?'hot':'off')));
+  tl.push(tile(t('tile.sac'), '×' + R.n6.toFixed(2), R.raid ? (R.n6>=3?t('tile.sac.cap'):t('tile.sac.upto')) : t('tile.sac.off'), R.raid && R.n6>1 ? 'hot':'off'));
+  tl.push(tile(t('tile.pen'), R.penalty ? '×' + R.pen.toFixed(3) : '—', R.penalty ? t('tile.pen.on', {rows: b.mP}) : (R.wish?t('tile.pen.wish'):t('tile.pen.off')), R.penalty?'bad':'off'));
+  tl.push(tile(t('tile.exp'), R.expected.toFixed(3), t('tile.exp.sub'), R.expected>0?'':'off'));
+  tl.push(tile(t('tile.any'), (R.anyItem*100).toFixed(2) + ' %', R.anyItem>0 ? t('tile.any.sub', {n: Math.max(1,Math.round(1/R.anyItem))}) : '—', R.anyItem>0?'':'off'));
+  $('#tiles').innerHTML = tl.join('');
 
   // таблица
   if (!S.target || !b.rows.some(r=>r.id===S.target)) S.target = (R.wish || b.rows[0].id);
@@ -409,13 +711,13 @@ function render(){
     const killsN = r.final > 0 ? Math.max(1, Math.round(100/r.final)) : null;
     const mv = r.blocked ? '—' : '×' + r.mult.toFixed(2);
     return `<tr tabindex="0" data-id="${r.id}" class="${r.id===S.target?'target':''} ${r.blocked||r.final===0?'dead':''}">
-      <td class="item"><span class="iname">${r.nm || r.id}</span>${r.special?' <span class="pill sp">особая</span>':''}${r.id===R.wish?' <span class="pill p7">виш</span>':''}${r.petOK?' <span class="pill p4">×1.5</span>':''}<span class="iid">${r.id}</span></td>
+      <td class="item"><span class="iname">${r.nm || r.id}</span>${r.special?` <span class="pill sp">${t('pill.special')}</span>`:''}${r.id===R.wish?` <span class="pill p7">${t('pill.wish')}</span>`:''}${r.petOK?' <span class="pill p4">×1.5</span>':''}<span class="iid">${r.id}</span></td>
       <td>${cat(r) || '<span class="dim">—</span>'}</td>
       <td><span class="pill p${RAR[r.ap]?r.ap:0}">${RAR[r.ap] || '—'}</span></td>
       <td class="r">${pct(r.ch)} %</td>
       <td class="r fin">${r.final>0?pct(r.final)+' %':'0'}</td>
       <td class="r"><span class="mult ${r.mult<1?'down':''}">${mv}</span></td>
-      <td class="r">${killsN ? killsN.toLocaleString('ru') : '—'}</td>
+      <td class="r">${killsN ? nfmt(killsN) : '—'}</td>
     </tr>`;
   }).join('');
   $('#rows').querySelectorAll('tr').forEach(tr=>{
@@ -431,51 +733,68 @@ function tile(k,v,s,cls){ return `<div class="tile ${cls||''}"><div class="k">${
 
 function renderBreakdown(R){
   const b = R.b, r = R.rows.find(x=>x.id===S.target);
-  if (!r){ $('#breakdown').innerHTML = ''; return; }
-  $('#brTitle').textContent = 'Разбор — ' + (r.nm || r.id);
-  $('#brSub').textContent = `${r.id} · ${cat(r)||'категория неизвестна'} · ${RAR[r.ap]||'редкость неизвестна'} · ${r.special?'особая строка':'обычная строка'}`;
+  if (!r){ $('#brTitle').textContent = t('br.title.empty'); $('#breakdown').innerHTML = ''; return; }
+  $('#brTitle').textContent = t('br.title', {name: r.nm || r.id});
+  $('#brSub').textContent = `${r.id} · ${cat(r)||t('br.cat.unknown')} · ${RAR[r.ap]||t('br.rar.unknown')} · ${r.special?t('br.kind.special'):t('br.kind.normal')}`;
 
   const st = [];
-  const add = (t,v,skip)=>st.push(`<div class="step ${skip?'skip':''}"><div class="t">${t}</div><div class="val">${v}</div></div>`);
+  const add = (txt,v,skip)=>st.push(`<div class="step ${skip?'skip':''}"><div class="t">${txt}</div><div class="val">${v}</div></div>`);
 
-  add('<b>Базовый шанс строки</b> — как он записан в таблице монстра', pct(r.ch) + ' %');
+  add(t('st.base'), pct(r.ch) + ' %');
 
   if (r.blocked){
-    add(`<b>Строка не разыгрывается</b> — ${r.why}`, '0');
+    add(t('st.blocked', {why: r.why}), '0');
     $('#breakdown').innerHTML = st.join('');
     return;
   }
 
-  const drTxt = R.mods.length ? R.mods.map(m=>`(1 ${m>0?'+':'−'} ${Math.abs(m)/100})`).join(' × ') + ' = ' + (1+R.dr).toFixed(3) : 'бонусов нет, ×1';
+  const drTxt = R.mods.length ? R.mods.map(m=>`(1 ${m>0?'+':'−'} ${Math.abs(m)/100})`).join(' × ') + ' = ' + (1+R.dr).toFixed(3) : t('st.dr.none');
   let v = r.ch * (1 + R.dr);
-  add(`<b>Дроп-рейт монстра.</b> ${R.N} игрок(ов)${R.N>=b.g.min?` — это ${clamp(R.N,b.g.min,b.g.max)-b.g.min+1} × ${b.g.step} %`:` — меньше порога ${b.g.min}, бонуса нет`}${S.diff==='hard'&&b.hard?`; Hard +${b.hard} %`:''}${S.diff==='prac'&&b.prac?'; Practice −100 %':''}. Множители перемножаются: ${drTxt}`, pct(v) + ' %', R.mods.length===0);
+  add(t('st.dr', {
+    N: R.N,
+    size: R.N>=b.g.min ? t('st.dr.size', {k: clamp(R.N,b.g.min,b.g.max)-b.g.min+1, step: b.g.step}) : t('st.dr.below', {min: b.g.min}),
+    hard: S.diff==='hard'&&b.hard ? t('st.dr.hard', {hard: b.hard}) : '',
+    prac: S.diff==='prac'&&b.prac ? t('st.dr.prac') : '',
+    expr: drTxt
+  }), pct(v) + ' %', R.mods.length===0);
 
   if (b.dp >= 4 && b.wish && !r.special){
     const parts = [];
-    if (S.sacMe) parts.push(`${S.sacMe} лично вам → +${(0.8*S.sacMe).toFixed(1)}`);
-    if (R.bai) parts.push(`${R.bai} «всем»${R.baiGroup?` (в т.ч. ${R.baiGroup} за недобор группы)`:''} → +${(0.8*R.bai/Math.max(R.bni,1)).toFixed(2)} на ${Math.max(R.bni,1)} нежертвующих`);
+    if (S.sacMe) parts.push(t('st.sac.me', {n: S.sacMe, v: (0.8*S.sacMe).toFixed(1)}));
+    if (R.bai) parts.push(t('st.sac.all', {
+      n: R.bai,
+      grp: R.baiGroup ? t('st.sac.all.grp', {n: R.baiGroup}) : '',
+      v: (0.8*R.bai/Math.max(R.bni,1)).toFixed(2),
+      k: Math.max(R.bni,1)
+    }));
     const capped = 1 + 0.8*S.sacMe + (R.bai>0 ? 0.8*R.bai/Math.max(R.bni,1) : 0) > 3;
     v *= R.n6;
-    add(`<b>Множитель сакрифайсов.</b> ${parts.length ? parts.join('; ') : 'никто не жертвует'}${capped?'. Итог обрезан потолком ×3.0':''}`, '× ' + R.n6.toFixed(2) + ' → ' + pct(v) + ' %', R.n6===1);
+    add(t('st.sac', {parts: parts.length ? parts.join('; ') : t('st.sac.none'), capped: capped ? t('st.sac.capped') : ''}),
+        '× ' + R.n6.toFixed(2) + ' → ' + pct(v) + ' %', R.n6===1);
     if (!R.wish){
       v *= R.pen;
-      add(`<b>Штраф за отсутствие виша.</b> Шанс делится на ${b.mP} обычных строк и умножается на 1.15`, '× ' + R.pen.toFixed(3) + ' → ' + pct(v) + ' %');
+      add(t('st.pen', {rows: b.mP}), '× ' + R.pen.toFixed(3) + ' → ' + pct(v) + ' %');
     } else if (r.id === R.wish){
-      add('<b>Виш загадан на этот предмет</b> — деления нет, идёт полный базовый шанс', 'без изменений', true);
+      add(t('st.wish.hit'), t('val.same'), true);
     }
   } else if (b.dp < 4 && r.id === R.wish){
     v *= 2.5;
-    add('<b>Виш на боссе ранга 3</b> — загаданный предмет получает ×2.5', '× 2.5 → ' + pct(v) + ' %');
+    add(t('st.wish.25'), '× 2.5 → ' + pct(v) + ' %');
   } else if (r.special){
-    add('<b>Особая строка</b> — виши и сакрифайсы её не касаются, лимит на неё не действует', 'без изменений', true);
+    add(t('st.special'), t('val.same'), true);
   }
 
-  if (r.petOK){ v *= 1.5; add(`<b>Иконка ${S.token}.</b> Категория ${cat(r)} и редкость ${RAR[r.ap]||'—'} подходят`, '× 1.5 → ' + pct(v) + ' %'); }
-  else if (S.token) add(`<b>Иконка ${S.token} не действует</b> — ${R.globalChest ? 'на общем сундуке бонус не считается' : (S.token==='I042' ? 'этот токен не проверяется в коде' : 'не та категория или редкость предмета')}`, '×1', true);
+  if (r.petOK){
+    v *= 1.5;
+    add(t('st.icon.on', {tok: S.token, cat: cat(r), rar: RAR[r.ap] || '—'}), '× 1.5 → ' + pct(v) + ' %');
+  } else if (S.token){
+    add(t('st.icon.off', {tok: S.token,
+      why: R.globalChest ? t('icon.why.shared') : (S.token==='I042' ? t('icon.why.i042') : t('icon.why.cat'))}), '×1', true);
+  }
 
   const fin = Math.min(v, 100);
-  add(`<b>Итог.</b> Игра бросает число 0–100 и сравнивает с этим значением${v>100?' (больше 100 — выпадает всегда)':''}`, pct(fin) + ' %');
-  if (fin > 0 && fin < 100) add('<b>В среднем киллов до дропа</b> — 100 ÷ итоговый шанс', Math.max(1, Math.round(100/fin)).toLocaleString('ru'));
+  add(t('st.final', {over: v>100 ? t('st.final.over') : ''}), pct(fin) + ' %');
+  if (fin > 0 && fin < 100) add(t('st.kills'), nfmt(Math.max(1, Math.round(100/fin))));
 
   $('#breakdown').innerHTML = st.join('');
 }
@@ -487,7 +806,7 @@ function setDiff(v, silent){
   if (!silent) render();
 }
 $('#diff').querySelectorAll('button').forEach(x=>x.onclick = ()=>{ if (!x.disabled) setDiff(x.dataset.v); });
-$('#boss').onchange   = e => { S.boss = +e.target.value; S.target = null; render(); };
+$('#boss').onchange   = e => { S.boss = +e.target.value; S.bossId = BOSSES[S.boss].id; S.target = null; render(); };
 $('#players').oninput = e => { S.players = clamp(+e.target.value || 1, 1, 10); render(); };
 $('#wish').onchange   = e => { S.wish = e.target.value; S.target = e.target.value || S.target; render(); };
 $('#token').onchange  = e => { S.token = e.target.value; render(); };
@@ -495,6 +814,9 @@ $('#iSac').onchange   = e => { S.iSac = e.target.checked; render(); };
 ['sacMe','sacAll','sacOther'].forEach(k=>{
   $('#'+k).oninput = e => { S[k] = clamp(+e.target.value || 0, 0, 9); render(); };
 });
+
+I18N.apply();
+I18N.on(()=>{ buildBosses(); render(); });   // смена языка — пересобрать подписи и пересчитать
 render();
 </script>
 
